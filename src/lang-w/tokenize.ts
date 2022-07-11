@@ -15,14 +15,18 @@ const tokenTypes: Array<TokenType> = [
     },
     {
         type: "operator",
-        regex: /<=|>=|<>|\+|-|\||\*|\/|&|!|<|>|=/
+        regex: /\+|-|\||\*|\/|&|!/
     },
     {
-        type: "bool",
+        type: "comparator",
+        regex: /<=|>=|<>|<|>|=/
+    },
+    {
+        type: "boolean",
         regex: /true|false/
     },
     {
-        type: "int",
+        type: "number",
         regex: /[0-9]+/
     },
     {
@@ -70,9 +74,15 @@ export const tokenize = (code: string): Array<Token> => {
                 text: code[i],
                 index: i
             });
-            i += 1
+            i++;
         }
     }
+
+    tokens.push({
+        text: "",
+        type: "eof",
+        index: i
+    })
 
     return tokens;
 }

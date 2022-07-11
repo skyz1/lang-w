@@ -16,10 +16,16 @@ function App() {
       <p>This websites provides some tools to work with the simple programming language W and to visualize basic compiler concepts.</p>
       <p className='mt-4'>Your code:</p>
       <textarea className='border-2 h-36' onChange={e => setCode(e.target.value)}></textarea>
-      <p className='mt-4'>Compiler output:</p>
-      <div className='border-2 p-2 overflow-y-scroll h-36'>{
-        tokens.map((token, i) => (<p key={"token-" + i}>{token.type}({token.index}): {token.text}</p>))
-      }</div>
+      <p className='mt-4'>Tokens:</p>
+      <div className='border-2 p-2 overflow-y-scroll flex flex-col space-y-1 h-36'>
+        {tokens.map((token, i) => 
+          <div key={"token-" + i} className={"flex flex-row " + (token.type === undefined ? "text-red-600" : "")}>
+            <span className='w-24'>{token.type}</span>
+            <span className='flex-auto'>{token.text}</span>
+            <span>{token.index}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

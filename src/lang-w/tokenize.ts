@@ -10,6 +10,10 @@ const tokenTypes: Array<TokenType> = [
         regex: /;|:=|skip|while|do|end|if|then|else/
     },
     {
+        type: "parenthesis",
+        regex: /\(|\)/
+    },
+    {
         type: "operator",
         regex: /<=|>=|<>|\+|-|\||\*|\/|&|!|<|>|=/
     },

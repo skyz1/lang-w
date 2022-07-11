@@ -50,7 +50,7 @@ function App() {
       <p className='mt-4 font-bold'>Tokens:</p>
       <div className='border-2 p-2 overflow-y-scroll flex flex-col space-y-1 h-36'>
         {tokens.map((token, i) => 
-          <div key={"token-" + i} className={"flex flex-row " + (token.type === undefined ? "text-red-600" : "")}>
+          <div key={"token-" + i} className={"flex flex-row " + token.color}>
             <span className='w-24'>{token.type}</span>
             <span className='flex-auto'>{token.text}</span>
             <span>{token.index}</span>

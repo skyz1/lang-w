@@ -1,4 +1,3 @@
-import { nodeModuleNameResolver } from 'typescript'
 import { Token } from './tokenize'
 
 export type AstNode = {

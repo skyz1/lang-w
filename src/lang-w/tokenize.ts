@@ -1,41 +1,50 @@
 type TokenType = {
     type: string,
     regex: RegExp,
+    color: string,
     ignore?: boolean
 }
 
 const tokenTypes: Array<TokenType> = [
     {
         type: "keyword",
-        regex: /;|:=|skip|while|do|end|if|then|else/
+        regex: /;|:=|skip|while|do|end|if|then|else/,
+        color: "text-fuchsia-700"
     },
     {
         type: "parenthesis",
-        regex: /\(|\)/
+        regex: /\(|\)/,
+        color: "text-lime-700"
     },
     {
         type: "operator",
-        regex: /\+|-|\||\*|\/|&|!/
+        regex: /\+|-|\||\*|\/|&|!/,
+        color: "text-lime-700"
     },
     {
         type: "comparator",
-        regex: /<=|>=|<>|<|>|=/
+        regex: /<=|>=|<>|<|>|=/,
+        color: "text-lime-700"
     },
     {
         type: "boolean",
-        regex: /true|false/
+        regex: /true|false/,
+        color: "text-green-900"
     },
     {
         type: "number",
-        regex: /[0-9]+/
+        regex: /[0-9]+/,
+        color: "text-green-700"
     },
     {
         type: "identifier",
-        regex: /[a-zA-Z_]+/
+        regex: /[a-zA-Z_]+/,
+        color: "text-sky-900"
     },
     {
         type: "whitespace",
         regex: /\s+/,
+        color: "text-black",
         ignore: true
     }
 ]
@@ -43,6 +52,7 @@ const tokenTypes: Array<TokenType> = [
 export type Token = {
     text: string,
     type?: string,
+    color: string,
     index: number
 }
 
@@ -60,6 +70,7 @@ export const tokenize = (code: string): Array<Token> => {
                     tokens.push({
                         text: match[0],
                         type: tokenType.type,
+                        color: tokenType.color,
                         index: i
                     });
                 }
@@ -72,6 +83,7 @@ export const tokenize = (code: string): Array<Token> => {
         if (!matched) {
             tokens.push({
                 text: code[i],
+                color: "red-600",
                 index: i
             });
             i++;
@@ -81,6 +93,7 @@ export const tokenize = (code: string): Array<Token> => {
     tokens.push({
         text: "",
         type: "eof",
+        color: "black",
         index: i
     })
 

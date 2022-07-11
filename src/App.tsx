@@ -3,21 +3,13 @@ import logo from './logo.svg';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className='flex flex-col m-4 space-y-2'>
+      <h1 className='text-3xl text-bold'>LangW</h1>
+      <p>This websites provides some tools to work with the simple programming language W and to visualize basic compiler concepts.</p>
+      <p className='mt-4'>Your code:</p>
+      <textarea className='border-2 h-36'></textarea>
+      <p className='mt-4'>Compiler output:</p>
+      <div className='border-2 p-2 overflow-y-scroll h-36'>No output</div>
     </div>
   );
 }

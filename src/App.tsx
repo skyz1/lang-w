@@ -44,7 +44,7 @@ function App() {
   return (
     <div className='flex flex-col m-4 space-y-2'>
       <h1 className='text-3xl font-bold'>LangW</h1>
-      <p>This websites provides some tools to work with the simple programming language W and to visualize basic compiler concepts.</p>
+      <p>This websites provides some tools to work with the simple programming language LangW and to visualize basic compiler concepts.</p>
       <p className='mt-4 font-bold'>Your code:</p>
       <textarea className='border-2 h-36' onChange={e => setCode(e.target.value)}></textarea>
       <p className='mt-4 font-bold'>Tokens:</p>

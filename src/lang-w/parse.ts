@@ -7,7 +7,7 @@ export type AstNode = {
 
 const AstNode = (value: string) => ({ type: value, children: () => [] })
 
-type SequenceNode = {
+export type SequenceNode = {
     type: "sequence",
     statements: Array<StatementNode>
 } & AstNode
@@ -20,9 +20,9 @@ const SequenceNode = (statements: Array<StatementNode>): SequenceNode => {
     }
 }
 
-type StatementNode = AssignmentNode | SkipNode | WhileNode | IfNode
+export type StatementNode = AssignmentNode | SkipNode | WhileNode | IfNode
 
-type AssignmentNode = {
+export type AssignmentNode = {
     type: "assignment",
     identifier: IdentifierNode,
     expression: ExpressionNode
@@ -35,7 +35,7 @@ const AssignmentNode = (identifier: IdentifierNode, expression: ExpressionNode):
     children: () => [identifier, expression]
 })
 
-type SkipNode = { 
+export type SkipNode = { 
     type: "skip"
 } & AstNode
 
@@ -46,7 +46,7 @@ const SkipNode = (): SkipNode => {
     }
 }
 
-type WhileNode = {
+export type WhileNode = {
     type: "while",
     head: ExpressionNode,
     body: SequenceNode,
@@ -59,7 +59,7 @@ const WhileNode = (head: ExpressionNode, body: SequenceNode): WhileNode => ({
     children: () => [head, body]
 })
 
-type IfNode = {
+export type IfNode = {
     type: "if",
     condition: ExpressionNode,
     consequence: SequenceNode,
@@ -74,9 +74,9 @@ const IfNode = (condition: ExpressionNode, consequence: SequenceNode, alternativ
     children: () => [condition, consequence, alternative]
 })
 
-type ExpressionNode = TermNode | LowPriorityOperationNode
+export type ExpressionNode = TermNode | LowPriorityOperationNode
 
-type LowPriorityOperationNode = {
+export type LowPriorityOperationNode = {
     type: "+"|"-"|"|",
     left: ExpressionNode,
     right: TermNode
@@ -89,9 +89,9 @@ const LowPriorityOperationNode = (left: ExpressionNode, operator: "+"|"-"|"|", r
     children: () => [left, right]
 })
 
-type TermNode = FactorNode | HighPriorityOperationNode
+export type TermNode = FactorNode | HighPriorityOperationNode
 
-type HighPriorityOperationNode = {
+export type HighPriorityOperationNode = {
     type: "*"|"/"|"&",
     left: TermNode,
     right: FactorNode
@@ -104,9 +104,9 @@ const HighPriorityOperationNode = (left: TermNode, operator: "*"|"/"|"&", right:
     children: () => [left, right]
 })
 
-type FactorNode = NotNode | NumberNode | IdentifierNode | BooleanNode | ParenthesizedExpressionNode | ComparisonNode
+export type FactorNode = NotNode | NumberNode | IdentifierNode | BooleanNode | ParenthesizedExpressionNode | ComparisonNode
 
-type NotNode = {
+export type NotNode = {
     type: "not",
     factor: FactorNode
 } & AstNode
@@ -117,7 +117,7 @@ const NotNode = (factor: FactorNode): NotNode => ({
     children: () => [factor]
 })
 
-type NumberNode = {
+export type NumberNode = {
     type: "number",
     value: number
 } & AstNode
@@ -128,7 +128,7 @@ const NumberNode = (value: number): NumberNode => ({
     children: () => [AstNode(String(value))]
 })
 
-type IdentifierNode = {
+export type IdentifierNode = {
     type: "identifier",
     identifier: string
 } & AstNode
@@ -139,7 +139,7 @@ const IdentifierNode = (identifier: string): IdentifierNode => ({
     children: () => [AstNode(identifier)]
 })
 
-type BooleanNode = {
+export type BooleanNode = {
     type: "boolean",
     value: boolean
 } & AstNode
@@ -150,7 +150,7 @@ const BooleanNode = (value: boolean): BooleanNode => ({
     children: () => [AstNode(String(value))]
 })
 
-type ParenthesizedExpressionNode = {
+export type ParenthesizedExpressionNode = {
     type: "parenthesized_expression",
     expression: ExpressionNode
 } & AstNode
@@ -161,19 +161,17 @@ const ParenthesizedExpressionNode = (expression: ExpressionNode): ParenthesizedE
     children: expression.children
 })
 
-type ComparisonNode = {
-    type: "comparison",
+export type ComparisonNode = {
+    type: "<="|">="|"<>"|"<"|">"|"=",
     left: ExpressionNode,
-    comparator: string,
     right: ExpressionNode
 } & AstNode
 
-const ComparisonNode = (left: ExpressionNode, comparator: string, right: ExpressionNode): ComparisonNode => ({
-    type: "comparison",
+const ComparisonNode = (left: ExpressionNode, comparator: "<="|">="|"<>"|"<"|">"|"=", right: ExpressionNode): ComparisonNode => ({
+    type: comparator,
     left: left,
-    comparator: comparator,
     right: right,
-    children: () => [left, AstNode(comparator), right]
+    children: () => [left, right]
 })
 
 export const parse = (tokens: Array<Token>): SequenceNode => {
@@ -234,8 +232,13 @@ export const parse = (tokens: Array<Token>): SequenceNode => {
         const left = parseExpression();
         const comparator = currentToken().text;
         consume("comparator");
-        const right = parseExpression();
-        return ComparisonNode(left, comparator, right);
+        if (comparator === "<=" || comparator === ">=" || comparator === "<>" ||
+            comparator === "<" || comparator === ">" || comparator === "=") {
+            const right = parseExpression();
+            return ComparisonNode(left, comparator, right);
+        } else {
+            throw Error("Unexpected comparator " + comparator);
+        }
     }
 
     const parseFactor = (): FactorNode => {

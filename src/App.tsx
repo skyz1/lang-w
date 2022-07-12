@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { compile, Program } from './lang-w/compile';
 import { AstNode, parse } from './lang-w/parse';
+import { run } from './lang-w/run';
 import { Token, tokenize } from './lang-w/tokenize';
 
 const AstTree = (props: {root: AstNode} ) => {
@@ -34,20 +35,29 @@ function App() {
   const [result, setResult] = useState<Array<{variable: number, value: number}>>([])
 
   useEffect(() => {
-    const tokenList = tokenize(code);
-    setTokens(tokenList);
+    setTokens([]);
+    setAst(undefined);
+    setProgram([]);
+    setResult([]);
     try {
+      const tokenList = tokenize(code);
+      setTokens(tokenList);
       const astRoot = parse(tokenList)
       setAst(astRoot);
       const opcodes = compile(astRoot)
-      console.log(opcodes);
       setProgram(opcodes);
     } catch (e: any) {
       console.log(e);
-      setAst(undefined);
-      setProgram([]);
     }
   }, [code])
+
+  const runProgram = () => {
+    const resultArray: Array<{variable: number, value: number}> = [];
+    run(program).forEach((value, variable) => {
+      resultArray.push({variable: variable, value: value});
+    })
+    setResult(resultArray);
+  };
 
   return (
     <div className='flex flex-col m-4 space-y-2'>
@@ -82,6 +92,20 @@ function App() {
                 <span className='w-6'>{i}</span>
                 <span className='w-16'>{instruction.opcode}</span>
                 {instruction.arguments && <span className='flex-auto'>{instruction.arguments.join(", ")}</span>}
+              </div>
+            )}
+          </div>
+          <button className='mt-4 font-bold border-2 bg-green-600 h-10 w-16' onClick={runProgram}>Run</button>
+        </>
+      }
+      {
+        result.length > 0 && <>
+          <p className='mt-4 font-bold'>Result:</p>
+          <div className='border-2 p-2 overflow-y-scroll flex flex-col space-y-1 h-36'>
+            {result.map((variableValue, i) => 
+              <div key={"result-" + i} className={"flex flex-row"}>
+                <span className='w-6'>{variableValue.variable}</span>
+                <span className='flex-auto'>{variableValue.value}</span>
               </div>
             )}
           </div>

@@ -30,23 +30,23 @@ export const compile = (ast: AstNode): Program => {
             case "while":
                 const head = compileNode((<WhileNode>ast).head);
                 const body = compileNode((<WhileNode>ast).body);
-                return [head, { opcode: "JZR", arguments: [body.length + 1] }, body, { opcode: "JMPR", arguments: [-(body.length + head.length + 1)] }].flat();
+                return [head, { opcode: "JZR", arguments: [body.length + 2] }, body, { opcode: "JMPR", arguments: [-(body.length + head.length + 1)] }].flat();
             case "if":
                 const consequence = compileNode((<IfNode>ast).consequence);
                 const alternative = compileNode((<IfNode>ast).alternative);
-                return [compileNode((<IfNode>ast).condition), { opcode: "JZR", arguments: [consequence.length + 1] }, consequence, { opcode: "JMPR", arguments: [alternative.length] }, alternative].flat();
+                return [compileNode((<IfNode>ast).condition), { opcode: "JZR", arguments: [consequence.length + 2] }, consequence, { opcode: "JMPR", arguments: [alternative.length + 1] }, alternative].flat();
             case "+":
-                return [compileNode((<LowPriorityOperationNode>ast).left), compileNode((<LowPriorityOperationNode>ast).right), { opcode: "ADD" }].flat();
+                return [compileNode((<LowPriorityOperationNode>ast).right), compileNode((<LowPriorityOperationNode>ast).left), { opcode: "ADD" }].flat();
             case "-":
-                return [compileNode((<LowPriorityOperationNode>ast).left), compileNode((<LowPriorityOperationNode>ast).right), { opcode: "SUB" }].flat();
+                return [compileNode((<LowPriorityOperationNode>ast).right), compileNode((<LowPriorityOperationNode>ast).left), { opcode: "SUB" }].flat();
             case "|":
-                return [compileNode((<LowPriorityOperationNode>ast).left), compileNode((<LowPriorityOperationNode>ast).right), { opcode: "OR" }].flat();
+                return [compileNode((<LowPriorityOperationNode>ast).right), compileNode((<LowPriorityOperationNode>ast).left), { opcode: "OR" }].flat();
             case "*":
-                return [compileNode((<HighPriorityOperationNode>ast).left), compileNode((<HighPriorityOperationNode>ast).right), { opcode: "MULT" }].flat();
+                return [compileNode((<HighPriorityOperationNode>ast).right), compileNode((<HighPriorityOperationNode>ast).left), { opcode: "MULT" }].flat();
             case "/":
-                return [compileNode((<HighPriorityOperationNode>ast).left), compileNode((<HighPriorityOperationNode>ast).right), { opcode: "DIV" }].flat();
+                return [compileNode((<HighPriorityOperationNode>ast).right), compileNode((<HighPriorityOperationNode>ast).left), { opcode: "DIV" }].flat();
             case "&":
-                return [compileNode((<HighPriorityOperationNode>ast).left), compileNode((<HighPriorityOperationNode>ast).right), { opcode: "AND" }].flat();
+                return [compileNode((<HighPriorityOperationNode>ast).right), compileNode((<HighPriorityOperationNode>ast).left), { opcode: "AND" }].flat();
             case "not":
                 return [compileNode((<NotNode>ast).factor), { opcode: "NEG" }].flat();
             case "number":
@@ -58,17 +58,17 @@ export const compile = (ast: AstNode): Program => {
             case "parenthesized_expression":
                 return compileNode((<ParenthesizedExpressionNode>ast).expression);
             case "<=":
-                return [compileNode((<ComparisonNode>ast).left), compileNode((<ComparisonNode>ast).right), { opcode: "LE" }].flat();
+                return [compileNode((<ComparisonNode>ast).right), compileNode((<ComparisonNode>ast).left), { opcode: "LE" }].flat();
             case ">=":
-                return [compileNode((<ComparisonNode>ast).left), compileNode((<ComparisonNode>ast).right), { opcode: "GE" }].flat();
+                return [compileNode((<ComparisonNode>ast).right), compileNode((<ComparisonNode>ast).left), { opcode: "GE" }].flat();
             case "<>":
-                return [compileNode((<ComparisonNode>ast).left), compileNode((<ComparisonNode>ast).right), { opcode: "NEQ" }].flat();
+                return [compileNode((<ComparisonNode>ast).right), compileNode((<ComparisonNode>ast).left), { opcode: "NEQ" }].flat();
             case "<":
-                return [compileNode((<ComparisonNode>ast).left), compileNode((<ComparisonNode>ast).right), { opcode: "LT" }].flat();
+                return [compileNode((<ComparisonNode>ast).right), compileNode((<ComparisonNode>ast).left), { opcode: "LT" }].flat();
             case ">":
-                return [compileNode((<ComparisonNode>ast).left), compileNode((<ComparisonNode>ast).right), { opcode: "GT" }].flat();
+                return [compileNode((<ComparisonNode>ast).right), compileNode((<ComparisonNode>ast).left), { opcode: "GT" }].flat();
             case "=":
-                return [compileNode((<ComparisonNode>ast).left), compileNode((<ComparisonNode>ast).right), { opcode: "EQ" }].flat();
+                return [compileNode((<ComparisonNode>ast).right), compileNode((<ComparisonNode>ast).left), { opcode: "EQ" }].flat();
             default:
                 return [];
         }

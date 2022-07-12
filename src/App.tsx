@@ -31,12 +31,13 @@ function App() {
   const [tokens, setTokens] = useState<Array<Token>>([])
   const [ast, setAst] = useState<AstNode|undefined>(undefined)
   const [program, setProgram] = useState<Program>([])
+  const [result, setResult] = useState<Array<{variable: number, value: number}>>([])
 
   useEffect(() => {
     const tokenList = tokenize(code);
     setTokens(tokenList);
     try {
-      const astRoot = parse(tokens)
+      const astRoot = parse(tokenList)
       setAst(astRoot);
       const opcodes = compile(astRoot)
       console.log(opcodes);

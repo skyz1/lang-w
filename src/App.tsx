@@ -26,31 +26,6 @@ const AstTree = (props: {root: AstNode} ) => {
   }
 }
 
-const ProgramView = (props: {program: Program} ) => {
-  const [collapsed, setCollapsed] = useState(false);
-
-  return <>{
-    props.program.map(instruction => {
-      if (instruction.variableName) {
-        return <p>{instruction.opcode + " " + instruction.variableName}</p>
-      } else if (instruction.value) {
-        return <p>{instruction.opcode + " " + instruction.value}</p>
-      } else if (instruction.program1 && instruction.program2) {
-        return <>
-          <p onClick={() => setCollapsed(c => !c)}>{instruction.opcode}</p>
-          <div className='ml-2' hidden={collapsed}>
-            <ProgramView program={instruction.program1}></ProgramView>
-            <div className='border-b border-gray-400'></div>
-            <ProgramView program={instruction.program2}></ProgramView>
-          </div>
-        </>
-      } else {
-        return <p>{instruction.opcode}</p>
-      }
-    })
-  }</>
-}
-
 function App() {
   const [code, setCode] = useState<string>("")
   const [tokens, setTokens] = useState<Array<Token>>([])
@@ -101,7 +76,13 @@ function App() {
         program.length > 0 && <>
           <p className='mt-4 font-bold'>Opcodes:</p>
           <div className='border-2 p-2 overflow-y-scroll flex flex-col space-y-1 h-36'>
-            <ProgramView program={program}></ProgramView>
+            {program.map((instruction, i) => 
+              <div key={"token-" + i} className={"flex flex-row"}>
+                <span className='w-6'>{i}</span>
+                <span className='w-16'>{instruction.opcode}</span>
+                {instruction.arguments && <span className='flex-auto'>{instruction.arguments.join(", ")}</span>}
+              </div>
+            )}
           </div>
         </>
       }

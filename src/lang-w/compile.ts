@@ -5,7 +5,7 @@ export type Program = Array<Instruction>
 
 export type Instruction = {
     opcode: string,
-    arguments?: Array<Number>
+    arguments?: Array<number>
 }
 
 export const compile = (ast: AstNode): Program => {
@@ -24,7 +24,7 @@ export const compile = (ast: AstNode): Program => {
             case "sequence":
                 return (<SequenceNode>ast).statements.flatMap(statement => compileNode(statement));
             case "assignment":
-                return [compileNode((<AssignmentNode>ast).expression), { opcode: "STORE", arguments: [getVariableAddress((<IdentifierNode>ast).identifier)] }].flat();
+                return [compileNode((<AssignmentNode>ast).expression), { opcode: "STORE", arguments: [getVariableAddress((<AssignmentNode>ast).identifier.identifier)] }].flat();
             case "skip":
                 return [{ opcode: "NOOP" }];
             case "while":

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { compile, Program } from './lang-w/compile';
 import { AstNode, parse } from './lang-w/parse';
 import { Token, tokenize } from './lang-w/tokenize';
-import logo from './logo.svg';
 
 const AstTree = (props: {root: AstNode} ) => {
   const rootChildren = props.root.children();
@@ -14,30 +14,62 @@ const AstTree = (props: {root: AstNode} ) => {
 
   if (rootChildren.length === 0) {
     return <>
-      <p className={'border-b'}>{props.root.type}</p>
+      <p className={'border-b border-gray-400'}>{props.root.type}</p>
     </>
   } else {
     return <>
-      <p className={'border-b'} onClick={() => setCollapsed(c => !c)}>{(collapsed ?  nodeToString(props.root) : props.root.type)}</p>
+      <p className={'border-b border-gray-400'} onClick={() => setCollapsed(c => !c)}>{(collapsed ?  nodeToString(props.root) : props.root.type)}</p>
       <div className='ml-2' hidden={collapsed}>
-        {rootChildren.map(child => <AstTree root={child}></AstTree>)}
+        {rootChildren.map((child, i) => <AstTree root={child} key={"child-" + i}></AstTree>)}
       </div>
     </>
   }
+}
+
+const ProgramView = (props: {program: Program} ) => {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return <>{
+    props.program.map(instruction => {
+      if (instruction.variableName) {
+        return <p>{instruction.opcode + " " + instruction.variableName}</p>
+      } else if (instruction.value) {
+        return <p>{instruction.opcode + " " + instruction.value}</p>
+      } else if (instruction.program1 && instruction.program2) {
+        return <>
+          <p onClick={() => setCollapsed(c => !c)}>{instruction.opcode}</p>
+          <div className='ml-2' hidden={collapsed}>
+            <ProgramView program={instruction.program1}></ProgramView>
+            <div className='border-b border-gray-400'></div>
+            <ProgramView program={instruction.program2}></ProgramView>
+          </div>
+        </>
+      } else {
+        return <p>{instruction.opcode}</p>
+      }
+    })
+  }</>
 }
 
 function App() {
   const [code, setCode] = useState<string>("")
   const [tokens, setTokens] = useState<Array<Token>>([])
   const [ast, setAst] = useState<AstNode|undefined>(undefined)
+  const [program, setProgram] = useState<Program>([])
 
   useEffect(() => {
-    const tokens = tokenize(code);
-    setTokens(tokens);
+    const tokenList = tokenize(code);
+    setTokens(tokenList);
     try {
-      setAst(parse(tokens));
+      const astRoot = parse(tokens)
+      setAst(astRoot);
+      const opcodes = compile(astRoot)
+      console.log(opcodes);
+      setProgram(opcodes);
     } catch (e: any) {
       console.log(e);
+      setAst(undefined);
+      setProgram([]);
     }
   }, [code])
 
@@ -62,6 +94,14 @@ function App() {
           <p className='mt-4 font-bold'>Abstract syntax tree:</p>
           <div className='border-2 p-2 overflow-y-scroll flex flex-col space-y-1 h-36'>
             <AstTree root={ast}></AstTree>
+          </div>
+        </>
+      }
+      {
+        program.length > 0 && <>
+          <p className='mt-4 font-bold'>Opcodes:</p>
+          <div className='border-2 p-2 overflow-y-scroll flex flex-col space-y-1 h-36'>
+            <ProgramView program={program}></ProgramView>
           </div>
         </>
       }

@@ -8,7 +8,7 @@ export type Instruction = {
     arguments?: Array<number>
 }
 
-export const compile = (ast: AstNode): Program => {
+export const compile = (ast: AstNode): [Program, Array<string>] => {
     const variableList: Array<string> = []
 
     const getVariableAddress = (variable: string) => {
@@ -74,5 +74,5 @@ export const compile = (ast: AstNode): Program => {
         }
     }
 
-    return compileNode(ast);
+    return [compileNode(ast), variableList];
 }

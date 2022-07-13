@@ -1,6 +1,6 @@
 import { parse } from 'path'
 import { isIdentifier } from 'typescript'
-import { AstNode, SequenceNode, AssignmentNode, WhileNode, IfNode, LowPriorityOperationNode, HighPriorityOperationNode, NotNode, NumberNode, IdentifierNode, BooleanNode, ParenthesizedExpressionNode, ComparisonNode } from './parse'
+import { AstNode, SequenceNode, AssignmentNode, WhileNode, IfNode, LowPriorityOperationNode, HighPriorityOperationNode, NotNode, NumberNode, IdentifierNode, BooleanNode, ParenthesizedCalculationNode, ComparisonNode } from './parse'
 
 export type Program = Array<Instruction>
 
@@ -28,7 +28,7 @@ export const compile = (ast: AstNode): [Program, Array<string>] => {
             case "assignment":
                 {
                     const identifier = (<AssignmentNode>ast).identifier.identifier
-                    return [compileNode((<AssignmentNode>ast).expression), { opcode: "STORE", argument: getVariableAddress(identifier), annotation: identifier }].flat();
+                    return [compileNode((<AssignmentNode>ast).calculation), { opcode: "STORE", argument: getVariableAddress(identifier), annotation: identifier }].flat();
                 }
             case "skip":
                 return [{ opcode: "NOOP" }];
@@ -63,8 +63,8 @@ export const compile = (ast: AstNode): [Program, Array<string>] => {
                 }
             case "boolean":
                 return [{ opcode: "PUSH", argument: (<BooleanNode>ast).value ? 1 : 0 }];
-            case "parenthesized_expression":
-                return compileNode((<ParenthesizedExpressionNode>ast).expression);
+            case "parenthesized_calculation":
+                return compileNode((<ParenthesizedCalculationNode>ast).calculation);
             case "<=":
                 return [compileNode((<ComparisonNode>ast).right), compileNode((<ComparisonNode>ast).left), { opcode: "LE" }].flat();
             case ">=":

@@ -25,14 +25,14 @@ export type StatementNode = AssignmentNode | SkipNode | WhileNode | IfNode
 export type AssignmentNode = {
     type: "assignment",
     identifier: IdentifierNode,
-    expression: ExpressionNode
+    calculation: CalculationNode
 } & AstNode
 
-const AssignmentNode = (identifier: IdentifierNode, expression: ExpressionNode): AssignmentNode => ({
+const AssignmentNode = (identifier: IdentifierNode, calculation: CalculationNode): AssignmentNode => ({
     type: "assignment",
     identifier: identifier,
-    expression: expression,
-    children: () => [identifier, expression]
+    calculation: calculation,
+    children: () => [identifier, calculation]
 })
 
 export type SkipNode = { 
@@ -48,11 +48,11 @@ const SkipNode = (): SkipNode => {
 
 export type WhileNode = {
     type: "while",
-    head: ExpressionNode,
+    head: CalculationNode,
     body: SequenceNode,
 } & AstNode
 
-const WhileNode = (head: ExpressionNode, body: SequenceNode): WhileNode => ({
+const WhileNode = (head: CalculationNode, body: SequenceNode): WhileNode => ({
     type: "while",
     head: head,
     body: body,
@@ -61,18 +61,26 @@ const WhileNode = (head: ExpressionNode, body: SequenceNode): WhileNode => ({
 
 export type IfNode = {
     type: "if",
-    condition: ExpressionNode,
+    condition: CalculationNode,
     consequence: SequenceNode,
     alternative: SequenceNode
 } & AstNode
 
-const IfNode = (condition: ExpressionNode, consequence: SequenceNode, alternative: SequenceNode): IfNode => ({
+const IfNode = (condition: CalculationNode, consequence: SequenceNode, alternative: SequenceNode): IfNode => ({
     type: "if",
     condition: condition,
     consequence: consequence,
     alternative: alternative,
     children: () => [condition, consequence, alternative]
 })
+
+export type CalculationNode = ExpressionNode | ComparisonNode
+
+export type ComparisonNode = {
+    type: "<="|">="|"<>"|"<"|">"|"=",
+    left: ExpressionNode,
+    right: ExpressionNode
+} & AstNode
 
 export type ExpressionNode = TermNode | LowPriorityOperationNode
 
@@ -104,7 +112,7 @@ const HighPriorityOperationNode = (left: TermNode, operator: "*"|"/"|"&", right:
     children: () => [left, right]
 })
 
-export type FactorNode = NotNode | NumberNode | IdentifierNode | BooleanNode | ParenthesizedExpressionNode | ComparisonNode
+export type FactorNode = NotNode | NumberNode | IdentifierNode | BooleanNode | ParenthesizedCalculationNode
 
 export type NotNode = {
     type: "not",
@@ -150,22 +158,16 @@ const BooleanNode = (value: boolean): BooleanNode => ({
     children: () => [AstNode(String(value))]
 })
 
-export type ParenthesizedExpressionNode = {
-    type: "parenthesized_expression",
-    expression: ExpressionNode
+export type ParenthesizedCalculationNode = {
+    type: "parenthesized_calculation",
+    calculation: CalculationNode
 } & AstNode
 
-const ParenthesizedExpressionNode = (expression: ExpressionNode): ParenthesizedExpressionNode => ({
-    type: "parenthesized_expression",
-    expression: expression,
-    children: expression.children
+const ParenthesizedCalculationNode = (calculation: CalculationNode): ParenthesizedCalculationNode => ({
+    type: "parenthesized_calculation",
+    calculation: calculation,
+    children: () => [calculation]
 })
-
-export type ComparisonNode = {
-    type: "<="|">="|"<>"|"<"|">"|"=",
-    left: ExpressionNode,
-    right: ExpressionNode
-} & AstNode
 
 const ComparisonNode = (left: ExpressionNode, comparator: "<="|">="|"<>"|"<"|">"|"=", right: ExpressionNode): ComparisonNode => ({
     type: comparator,
@@ -221,24 +223,11 @@ export const parse = (tokens: Array<Token>): SequenceNode => {
         return BooleanNode(Boolean(booleanstring));
     }
 
-    const parseParenthesizedExpression = (): ParenthesizedExpressionNode => {
+    const parseParenthesizedCalculation = (): ParenthesizedCalculationNode => {
         consume("parenthesis", "(");
-        const expression = parseExpression();
+        const calculation = parseCalculation();
         consume("parenthesis", ")");
-        return ParenthesizedExpressionNode(expression);
-    }
-
-    const parseComparison = (): ComparisonNode => {
-        const left = parseExpression();
-        const comparator = currentToken().text;
-        consume("comparator");
-        if (comparator === "<=" || comparator === ">=" || comparator === "<>" ||
-            comparator === "<" || comparator === ">" || comparator === "=") {
-            const right = parseExpression();
-            return ComparisonNode(left, comparator, right);
-        } else {
-            throw Error("Unexpected comparator " + comparator);
-        }
+        return ParenthesizedCalculationNode(calculation);
     }
 
     const parseFactor = (): FactorNode => {
@@ -252,23 +241,18 @@ export const parse = (tokens: Array<Token>): SequenceNode => {
             case "boolean":
                 return parseBoolean();
             case "parenthesis":
-                return parseParenthesizedExpression();
+                return parseParenthesizedCalculation();
             default:
-                // FIXME: This is not working
-                return parseComparison();
+                throw Error("Unexpected " + currentToken().type + " token " + currentToken().text + " at " + currentToken().index);
         }
     }
 
     const parseTerm = (left?: TermNode): TermNode => {
         if (left) {
-            if (["*", "/", "&"].some(operator => matches("operator", operator))) {
-                const operator = currentToken().text;
-                if (operator === "*" || operator === "/" || operator === "&") {
-                    consume("operator");
-                    return parseTerm(HighPriorityOperationNode(left, operator, parseFactor()));
-                } else {
-                    throw Error("Unexpected operator " + operator);
-                }
+            const operator = currentToken().text;
+            if (operator === "*" || operator === "/" || operator === "&") {
+                consume("operator");
+                return parseTerm(HighPriorityOperationNode(left, operator, parseFactor()));
             } else {
                 return left;
             }
@@ -279,20 +263,29 @@ export const parse = (tokens: Array<Token>): SequenceNode => {
 
     const parseExpression = (left?: ExpressionNode): ExpressionNode => {
         if (left) {
-            if (["+", "-", "|"].some(operator => matches("operator", operator))) {
-                const operator = currentToken().text;
-                if (operator === "+" || operator === "-" || operator === "|") {
-                    consume("operator");
-                    return parseExpression(LowPriorityOperationNode(left, operator, parseTerm()));
-                } else {
-                    throw Error("Unexpected operator " + operator);
-                }
+            const operator = currentToken().text;
+            if (operator === "+" || operator === "-" || operator === "|") {
+                consume("operator");
+                return parseExpression(LowPriorityOperationNode(left, operator, parseTerm()));
             } else {
                 return left;
             }
         }
 
         return parseExpression(parseTerm());
+    }
+
+    const parseCalculation = (): CalculationNode => {
+        const left = parseExpression();
+        const comparator = currentToken().text;
+        if (comparator === "<=" || comparator === ">=" || comparator === "<>" ||
+            comparator === "<" || comparator === ">" || comparator === "=") {
+            consume("comparator")
+            const right = parseExpression();
+            return ComparisonNode(left, comparator, right);
+        } else {
+            return left;
+        }
     }
 
     const parseSkip = (): SkipNode => {
@@ -302,7 +295,7 @@ export const parse = (tokens: Array<Token>): SequenceNode => {
 
     const parseWhile = (): WhileNode => {
         consume("keyword", "while");
-        const head = parseExpression();
+        const head = parseCalculation();
         consume("keyword", "do");
         const body = parseSequence();
         consume("keyword", "end");
@@ -311,7 +304,7 @@ export const parse = (tokens: Array<Token>): SequenceNode => {
 
     const parseIf = (): IfNode => {
         consume("keyword", "if");
-        const condition = parseExpression();
+        const condition = parseCalculation();
         consume("keyword", "then");
         const consequence = parseSequence();
         let alternative: SequenceNode;
@@ -328,7 +321,7 @@ export const parse = (tokens: Array<Token>): SequenceNode => {
     const parseAssignment = (): AssignmentNode => {
         const identifier = parseIdentifier();
         consume("keyword", ":=");
-        const expression = parseExpression();
+        const expression = parseCalculation();
         return AssignmentNode(identifier, expression);
     }
 

@@ -84,9 +84,9 @@ function App() {
           <div className='border-2 p-2 overflow-y-scroll flex flex-col space-y-1 h-36'>
             {codeProcessingResults.program.map((instruction, i) => 
               <div key={"token-" + i} className={"flex flex-row"}>
-                <span className='w-6'>{i}</span>
+                <span className='w-8'>{i}</span>
                 <span className='w-16'>{instruction.opcode}</span>
-                {instruction.arguments && <span className='flex-auto'>{instruction.arguments.join(", ")}</span>}
+                <span className='flex-auto'>{ instruction.annotation || instruction.argument || "" }</span>
               </div>
             )}
           </div>

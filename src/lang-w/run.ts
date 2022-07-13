@@ -1,4 +1,4 @@
-import { Program } from './compile'
+import { Instruction, Program } from './compile'
 
 type AbstractMachine = {
     instructions: Program,
@@ -28,24 +28,35 @@ export const run = (program: Program) => {
         am.stack.push(operation(left, right));
     }
 
-    const executeInstruction = () => {
+    const getArgument = (instruction: Instruction): number => {
+        if (instruction.argument === undefined) {
+            throw Error(instruction.opcode + " instruction missing argument");
+        }
+        return instruction.argument
+    }
+
+    const popFromStack = (): number => {
+        const value = am.stack.pop();
+        if (value === undefined) {
+            throw Error("Stack underflow");
+        }
+        return value;
+    }
+
+    const executeInstruction = (): boolean => {
         const currentInstruction = am.instructions[am.instructionPointer];
         const oldInstructionPointer = am.instructionPointer;
         switch (currentInstruction.opcode) {
+            case "END":
+                return true;
             case "NOOP":
                 break;
             case "PUSH":
-                if (currentInstruction.arguments === undefined || currentInstruction.arguments.length !== 1) {
-                    throw Error("PUSH instruction missing argument");
-                }
-                am.stack.push(currentInstruction.arguments[0]);
+                am.stack.push(getArgument(currentInstruction));
                 break;
             case "FETCH":
-                if (currentInstruction.arguments === undefined || currentInstruction.arguments.length !== 1) {
-                    throw Error("FETCH instruction missing argument");
-                }
                 {
-                    const address = currentInstruction.arguments[0];
+                    const address = getArgument(currentInstruction);
                     const value = am.state.get(address);
                     if (value) {
                         am.stack.push(value);
@@ -56,44 +67,28 @@ export const run = (program: Program) => {
                 }
                 break;
             case "STORE":
-                if (currentInstruction.arguments === undefined || currentInstruction.arguments.length !== 1) {
-                    throw Error("STORE instruction missing argument");
-                }
                 {
-                    const value = am.stack.pop();
-                    if (value === undefined) {
-                        throw Error("Stack underflow");
-                    }
-                    am.state.set(currentInstruction.arguments[0], value);
+                    const address = getArgument(currentInstruction);
+                    const value = popFromStack();
+                    am.state.set(address, value);
                 }
                 break;
-            case "JMPR":
-                if (currentInstruction.arguments === undefined || currentInstruction.arguments.length !== 1) {
-                    throw Error("JMPR instruction missing argument");
-                }
-                if (am.instructionPointer < -currentInstruction.arguments[0] 
-                    && am.instructionPointer >= am.instructions.length - currentInstruction.arguments[0]) {
-                    throw Error("Jump out of range");
-                }
-                am.instructionPointer += currentInstruction.arguments[0];
-                break;
-            case "JZR":
-                if (currentInstruction.arguments === undefined || currentInstruction.arguments.length !== 1) {
-                    throw Error("JZR instruction missing argument");
-                }
+            case "JMP":
                 {
-                    const value = am.stack.pop();
-                    if (value === undefined) {
-                        throw Error("Stack underflow");
-                    }
-                    if (value !== 0) {
-                        break;
-                    }
-                    if (am.instructionPointer < -currentInstruction.arguments[0] 
-                        && am.instructionPointer >= am.instructions.length - currentInstruction.arguments[0]) {
+                    const newInstructionPointer = am.instructionPointer + getArgument(currentInstruction);
+                    if (newInstructionPointer < 0 || newInstructionPointer >= am.instructions.length) {
                         throw Error("Jump out of range");
                     }
-                    am.instructionPointer += currentInstruction.arguments[0];
+                    am.instructionPointer = newInstructionPointer;
+                }
+                break;
+            case "JZ":
+                if (popFromStack() === 0) {
+                    const newInstructionPointer = am.instructionPointer + getArgument(currentInstruction);
+                    if (newInstructionPointer < 0 || newInstructionPointer >= am.instructions.length) {
+                        throw Error("Jump out of range");
+                    }
+                    am.instructionPointer = newInstructionPointer;
                 }
                 break;
             case "ADD":
@@ -120,13 +115,7 @@ export const run = (program: Program) => {
                 performCalculation((l, r) => ((l !== 0) && (r !== 0)) ? 1 : 0);
                 break;
             case "NEG":
-                {
-                    const value = am.stack.pop();
-                    if (value === undefined) {
-                        throw Error("Stack underflow");
-                    }
-                    am.stack.push(value === 0 ? 1 : 0);
-                }
+                am.stack.push(popFromStack() === 0 ? 1 : 0);
                 break;
             case "LE":
                 performCalculation((l, r) => l <= r ? 1 : 0);
@@ -154,10 +143,13 @@ export const run = (program: Program) => {
         if (oldInstructionPointer === am.instructionPointer) {
             am.instructionPointer++;
         }
+
+        return false;
     }
 
-    while (am.instructionPointer !== am.instructions.length) {
-        executeInstruction();
-    }
+    var finished = false;
+    do {
+        finished = executeInstruction();
+    } while (!finished);
     return am.state
 }

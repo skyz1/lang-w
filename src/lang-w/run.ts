@@ -108,7 +108,7 @@ export const run = (program: Program) => {
                     if (r === 0) {
                         throw Error("Division by zero");
                     }
-                    return l / r;
+                    return Math.floor(l / r);
                 });
                 break;
             case "AND":

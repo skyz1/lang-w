@@ -83,7 +83,8 @@ export const tokenize = (code: string): Array<Token> => {
         if (!matched) {
             tokens.push({
                 text: code[i],
-                color: "red-600",
+                type: "unknown",
+                color: "text-red-500",
                 index: i
             });
             i++;

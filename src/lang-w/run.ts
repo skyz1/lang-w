@@ -1,4 +1,5 @@
 import { Instruction, Program } from './compile'
+import { Intermediate, Result } from './pipeline'
 
 type AbstractMachine = {
     instructions: Program,
@@ -16,7 +17,7 @@ const AbstractMachine = (program: Program): AbstractMachine => {
     }
 }
 
-export const run = (program: Program) => {
+export const run = ({ program, variableList }: { program: Program, variableList: Array<string> }): Result => {
     const am = AbstractMachine(program);
 
     const performCalculation = (operation: (left: number, right: number) => number) => {
@@ -151,5 +152,8 @@ export const run = (program: Program) => {
     do {
         finished = executeInstruction();
     } while (!finished);
-    return am.state
+
+    const finalState: Map<string, number> = new Map<string, number>();
+    am.state.forEach((value, address) => finalState.set(variableList[address], value))
+    return finalState;
 }

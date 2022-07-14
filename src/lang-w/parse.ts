@@ -1,3 +1,4 @@
+import { Intermediate } from './pipeline'
 import { Token } from './tokenize'
 
 export type AstNode = {
@@ -176,7 +177,7 @@ const ComparisonNode = (left: ExpressionNode, comparator: "<="|">="|"<>"|"<"|">"
     children: () => [left, right]
 })
 
-export const parse = (tokens: Array<Token>): SequenceNode => {
+export const parse = (tokens: Array<Token>): Intermediate => {
     var i = 0
 
     const currentToken = (): Token => tokens[i];
@@ -353,5 +354,5 @@ export const parse = (tokens: Array<Token>): SequenceNode => {
         }
     }
 
-    return parseSequence();
+    return { type: "AST", value: parseSequence() };
 }

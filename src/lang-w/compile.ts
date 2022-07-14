@@ -1,6 +1,7 @@
 import { parse } from 'path'
 import { isIdentifier } from 'typescript'
 import { AstNode, SequenceNode, AssignmentNode, WhileNode, IfNode, LowPriorityOperationNode, HighPriorityOperationNode, NotNode, NumberNode, IdentifierNode, BooleanNode, ParenthesizedCalculationNode, ComparisonNode } from './parse'
+import { Intermediate } from './pipeline'
 
 export type Program = Array<Instruction>
 
@@ -10,7 +11,7 @@ export type Instruction = {
     annotation?: string,
 }
 
-export const compile = (ast: AstNode): [Program, Array<string>] => {
+export const compile = (ast: AstNode): Intermediate => {
     const variableList: Array<string> = []
 
     const getVariableAddress = (variable: string) => {
@@ -92,5 +93,5 @@ export const compile = (ast: AstNode): [Program, Array<string>] => {
         }
     })
 
-    return [program, variableList];
+    return { type: "Opcodes", value: { program, variableList } };
 }

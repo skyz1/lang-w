@@ -1,3 +1,5 @@
+import { Intermediate } from './pipeline'
+
 type TokenType = {
     type: string,
     regex: RegExp,
@@ -56,7 +58,7 @@ export type Token = {
     index: number
 }
 
-export const tokenize = (code: string): Array<Token> => {
+export const tokenize = (code: string): Intermediate => {
     const tokens: Array<Token> = [];
     var i = 0;
 
@@ -97,6 +99,6 @@ export const tokenize = (code: string): Array<Token> => {
         color: "black",
         index: i
     })
-
-    return tokens;
+    
+    return { type: "Tokens", value: tokens };
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AstNode } from './lang-w/parse';
-import { CodeProcessingResults, processCode, VariableValue } from './lang-w/processCode';
+import { ExecutionStep, Intermediate, pipeline, Result } from './lang-w/pipeline';
 
 const AstTree = (props: {root: AstNode} ) => {
   const rootChildren = props.root.children();
@@ -39,29 +39,51 @@ const AstTree = (props: {root: AstNode} ) => {
 
 function App() {
   const [code, setCode] = useState<string>("")
-  const [codeProcessingResults, setCodeProcessingResults] = useState<CodeProcessingResults|undefined>(undefined);
-  const [result, setResult] = useState<Array<VariableValue>>([]);
+  const [pipelineName, setPipelineName] = useState<string>("Interpreter");
+  const [intermediates, setIntermediates] = useState<Array<Intermediate>>([]);
+  const [result, setResult] = useState<Result>(new Map<string, number>());
   const [errorMessage, setErrorMessage] = useState<string|undefined>(undefined);
 
   useEffect(() => {
-    processCode(code).then(result => {
-      setResult([]);
-      if (result.code === code) {
-        setCodeProcessingResults(result);
-        setErrorMessage(result.error);
+    if (pipelineName === "Interpreter" || pipelineName === "Abstract Machine") {
+      try {
+        setResult(new Map<string, number>());
+        setErrorMessage(undefined);
+        const pl = pipeline(pipelineName);
+        setIntermediates(pl.runPipeline(code));
+      } catch (e: any) {
+        console.log(e);
+        setErrorMessage(e.message);
       }
-    });
-  }, [code])
+    } else {
+      setErrorMessage("Unsupported pipeline");
+    }
+  }, [pipelineName, code]);
 
   const runCode = () => {
-    codeProcessingResults?.run().then(values => {
-      setResult(values);
-      setErrorMessage(undefined);
-    }).catch(e => {
-      setResult([]);
-      setErrorMessage(e.message);
-    });
+    if (pipelineName === "Interpreter" || pipelineName === "Abstract Machine") {
+      try {
+        setErrorMessage(undefined);
+        const pl = pipeline(pipelineName);
+        setResult(pl.executionStep(intermediates[intermediates.length - 1].value));
+      } catch (e: any) {
+        console.log(e);
+        setErrorMessage(e.message);
+      }
+    } else {
+      setErrorMessage("Unsupported pipeline");
+    }
   }
+  console.log(result);
+
+  const resultElements: any = []
+  result.forEach((value, key) => 
+  resultElements.push( 
+    <div key={"result-" + value} className={"flex flex-row"}>
+      <span className='w-12'>{key}</span>
+      <span className='flex-auto'>{value}</span>
+    </div>)
+  )
 
   return (
     <div className='flex flex-col m-4 space-y-2'>
@@ -69,7 +91,14 @@ function App() {
       <p>This websites provides some tools to work with the simple programming language LangW and to visualize basic compiler concepts.</p>
       <p className='mt-4 font-bold'>Your code:</p>
       <textarea className='border-2 h-36' onChange={e => setCode(e.target.value)}></textarea>
-      { codeProcessingResults && <>
+      <div className='flex flex-row'>
+        <span className='flex-none text-bold mr-4'>Pipeline: </span>
+        <select className='flex-auto border-2' value={pipelineName} onChange={e => setPipelineName(e.target.value)}>
+          <option value="Interpreter">Interpreter</option>
+          <option value="Abstract Machine">Abstract Machine</option>
+        </select>
+      </div>
+      { /*codeProcessingResults && <>
           <p className='mt-4 font-bold'>Tokens:</p>
           <div className='border-2 p-2 overflow-auto h-36'>
             {codeProcessingResults.tokens.map((token, i) => 
@@ -102,19 +131,14 @@ function App() {
               </div>
             )}
           </div>
-          <button className='mt-4 font-bold border-2 bg-green-600 h-10 w-16' onClick={runCode}>Run</button>
-        </>
+        </>*/
       }
+      <button className='mt-4 font-bold border-2 bg-green-600 h-10 w-16' onClick={runCode}>Run</button>
       {
-        result.length > 0 && <>
+        result.size > 0 && <>
           <p className='mt-4 font-bold'>Result:</p>
           <div className='border-2 p-2 overflow-auto flex flex-col space-y-1 h-36'>
-            {result.map((variableValue, i) => 
-              <div key={"result-" + i} className={"flex flex-row"}>
-                <span className='w-12'>{variableValue.variable}</span>
-                <span className='flex-auto'>{variableValue.value}</span>
-              </div>
-            )}
+            {resultElements}
           </div>
         </>
       }

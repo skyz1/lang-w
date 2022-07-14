@@ -1,20 +1,21 @@
 import { AssignmentNode, AstNode, BooleanNode, ComparisonNode, HighPriorityOperationNode, IdentifierNode, IfNode, LowPriorityOperationNode, NotNode, NumberNode, ParenthesizedCalculationNode, SequenceNode, WhileNode } from './parse';
+import { Intermediate, Result } from './pipeline';
 
-export const interpret = (ast: AstNode): {[variable: string]: number} => {
-    const state: {[variable: string]: number} = {}
+export const interpret = (root: AstNode): Result => {
+    const state: Map<string, number> = new Map<string, number>();
 
     const getVariableValue = (variable: string): number => {
-        const value = state[variable];
+        const value = state.get(variable);
         if (!value) {
-            state[variable] = 0
+            state.set(variable, 0)
             return 0;
         } 
         return value;
     } 
 
     const interpretNodeWithResult = (ast: AstNode): number => {
-        const value = interpretNode((<AssignmentNode>ast).calculation);
-        if (!value) {
+        const value = interpretNode(ast);
+        if (value === undefined) {
             throw Error("No result from calculation");
         }
         return value;
@@ -28,7 +29,7 @@ export const interpret = (ast: AstNode): {[variable: string]: number} => {
                 });
                 return;
             case "assignment":
-                state[(<AssignmentNode>ast).identifier.identifier] = interpretNodeWithResult((<AssignmentNode>ast).calculation);
+                state.set((<AssignmentNode>ast).identifier.identifier, interpretNodeWithResult((<AssignmentNode>ast).calculation));
                 return;
             case "skip":
                 return;
@@ -65,6 +66,7 @@ export const interpret = (ast: AstNode): {[variable: string]: number} => {
             case "&":
                 return interpretNodeWithResult((<HighPriorityOperationNode>ast).left) !== 0 && interpretNodeWithResult((<HighPriorityOperationNode>ast).right) !== 0 ? 1 : 0;
             case "not":
+                console.log(interpretNodeWithResult((<NotNode>ast).factor) === 0 ? 1 : 0);
                 return interpretNodeWithResult((<NotNode>ast).factor) === 0 ? 1 : 0;
             case "number":
                 return (<NumberNode>ast).value;
@@ -91,7 +93,7 @@ export const interpret = (ast: AstNode): {[variable: string]: number} => {
         }
     }
 
-    interpretNode(ast);
+    interpretNode(root);
 
-    return state
+    return state;
 }

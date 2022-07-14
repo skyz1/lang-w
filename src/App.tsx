@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Collapsible from './Collapsible';
 import { AstNode } from './lang-w/parse';
 import { ExecutionStep, Intermediate, pipeline, Result } from './lang-w/pipeline';
 
@@ -135,20 +136,18 @@ function App() {
       }
       <button className='mt-4 font-bold border-2 bg-green-600 h-10 w-16' onClick={runCode}>Run</button>
       {
-        result.size > 0 && <>
-          <p className='mt-4 font-bold'>Result:</p>
-          <div className='border-2 p-2 overflow-auto flex flex-col space-y-1 h-36'>
+        result.size > 0 && <Collapsible name="Result:">
+          <div className='flex flex-col space-y-1'>
             {resultElements}
           </div>
-        </>
+        </Collapsible>
       }
       {
-        errorMessage && <>
-          <p className='mt-4 font-bold'>Error:</p>
-          <div className='border-2 p-2 overflow-auto flex flex-col space-y-1 h-36'>
+        errorMessage && <Collapsible name="Error">
+          <div className='flex flex-col space-y-1'>
             <div className={"flex flex-row text-red-600"}>{errorMessage}</div>
           </div>
-        </>
+        </Collapsible>
       }
     </div>
   );

@@ -10,24 +10,29 @@ export type Pipeline = {
     runPipeline: (code: string) => [Array<Intermediate>, string|undefined]
 }
 
-export type CompilationStep = (intermediate: any) => Intermediate
-export type ExecutionStep = (executable: any) => Result
+export type CompilationStep = (intermediate: Intermediate) => Intermediate
+export type ExecutionStep = (executable: Intermediate) => Result
 
-export type Intermediate = TokenIntermediate|AstIntermediate|OpcodeIntermediate
+export type Intermediate = CodeIntermediate|TokenIntermediate|AstIntermediate|OpcodeIntermediate
+
+type CodeIntermediate = {
+    type: "Code",
+    code: string
+}
 
 type TokenIntermediate = {
     type: "Tokens",
-    value: Array<Token>
+    tokens: Array<Token>
 }
 
 type AstIntermediate = {
     type: "AST",
-    value: AstNode
+    ast: AstNode
 }
 
 type OpcodeIntermediate = {
     type: "Opcodes",
-    value: { program: Program, variableList: Array<string> }
+    opcodes: { program: Program, variableList: Array<string> }
 }
 
 export type Result = Map<string, number>
@@ -51,7 +56,7 @@ export const pipeline = (name: "Interpreter"|"Abstract Machine"): Pipeline => {
         const intermediates: Array<Intermediate> = [];
         try {
             compilationSteps.forEach(compilationStep => {
-                intermediates.push(compilationStep(intermediates.length === 0 ? code : intermediates[intermediates.length - 1].value))
+                intermediates.push(compilationStep(intermediates.length === 0 ? { type: "Code", code: code} : intermediates[intermediates.length - 1]))
             });
             return [intermediates, undefined];
         } catch (e: any) {

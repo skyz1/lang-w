@@ -5,12 +5,14 @@ import TokensComponent from './TokensComponent';
 
 function IntermediateComponent({intermediate}: {intermediate: Intermediate}) {
   switch (intermediate.type) {
+    case "Code":
+      return <>{intermediate.code}</>
     case "Tokens":
-      return <TokensComponent tokens={intermediate.value}></TokensComponent>
+      return <TokensComponent tokens={intermediate.tokens}></TokensComponent>
     case "AST":
-      return <AstComponent root={intermediate.value}></AstComponent>
+      return <AstComponent root={intermediate.ast}></AstComponent>
     case "Opcodes":
-      return <OpcodeComponent program={intermediate.value.program}></OpcodeComponent>
+      return <OpcodeComponent program={intermediate.opcodes.program}></OpcodeComponent>
   }
 }
 

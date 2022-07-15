@@ -1,5 +1,5 @@
 import { Instruction, Program } from './compile'
-import { Result } from './pipeline'
+import { Intermediate, Result } from './pipeline'
 
 type AbstractMachine = {
     instructions: Program,
@@ -17,7 +17,12 @@ const AbstractMachine = (program: Program): AbstractMachine => {
     }
 }
 
-export const run = ({ program, variableList }: { program: Program, variableList: Array<string> }): Result => {
+export const run = (intermediate: Intermediate): Result => {
+    if (intermediate.type !== "Opcodes") {
+        throw Error("AM expected opcodes but got " + intermediate.type);
+    }
+    const { program, variableList } = intermediate.opcodes;
+
     const am = AbstractMachine(program);
 
     const performCalculation = (operation: (left: number, right: number) => number) => {

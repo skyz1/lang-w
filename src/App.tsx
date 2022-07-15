@@ -39,7 +39,7 @@ function App() {
 
     try {
       setErrorMessage(undefined);
-      setResult(pl.executionStep(intermediates[intermediates.length - 1].value));
+      setResult(pl.executionStep(intermediates[intermediates.length - 1]));
     } catch (e: any) {
       console.log(e);
       setErrorMessage(e.message);

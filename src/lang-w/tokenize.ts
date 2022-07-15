@@ -58,7 +58,12 @@ export type Token = {
     index: number
 }
 
-export const tokenize = (code: string): Intermediate => {
+export const tokenize = (intermediate: Intermediate): Intermediate => {
+    if (intermediate.type !== "Code") {
+        throw Error("Tokenizer expected code but got " + intermediate.type);
+    }
+    const code = intermediate.code;
+    
     const tokens: Array<Token> = [];
     var i = 0;
 
@@ -100,5 +105,5 @@ export const tokenize = (code: string): Intermediate => {
         index: i
     })
     
-    return { type: "Tokens", value: tokens };
+    return { type: "Tokens", tokens: tokens };
 }

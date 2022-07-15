@@ -7,8 +7,6 @@ export type Children = {
     children: () => Array<AstNode>
 }
 
-const EmptyNode = () => ({ children: () => [] })
-
 export type SequenceNode = {
     type: "sequence",
     statements: Array<StatementNode>
@@ -178,7 +176,12 @@ const ParenthesizedCalculationNode = (calculation: CalculationNode): Parenthesiz
     children: () => [calculation]
 })
 
-export const parse = (tokens: Array<Token>): Intermediate => {
+export const parse = (intermediate: Intermediate): Intermediate => {
+    if (intermediate.type !== "Tokens") {
+        throw Error("Parser expected tokens but got " + intermediate.type);
+    }
+    const tokens = intermediate.tokens;
+
     var i = 0
 
     const currentToken = (): Token => tokens[i];
@@ -355,5 +358,5 @@ export const parse = (tokens: Array<Token>): Intermediate => {
         }
     }
 
-    return { type: "AST", value: parseSequence() };
+    return { type: "AST", ast: parseSequence() };
 }

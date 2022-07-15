@@ -1,7 +1,12 @@
 import { IfNode, WhileNode, AstNode } from './parse';
-import { Result } from './pipeline';
+import { Intermediate, Result } from './pipeline';
 
-export const interpret = (root: AstNode): Result => {
+export const interpret = (intermediate: Intermediate): Result => {
+    if (intermediate.type !== "AST") {
+        throw Error("Interpreter expected ast but got " + intermediate.type);
+    }
+    const ast = intermediate.ast;
+
     const state: Map<string, number> = new Map<string, number>();
 
     const getVariableValue = (variable: string): number => {
@@ -93,7 +98,7 @@ export const interpret = (root: AstNode): Result => {
         }
     }
 
-    interpretNode(root);
+    interpretNode(ast);
 
     return state;
 }

@@ -9,7 +9,12 @@ export type Instruction = {
     annotation?: string,
 }
 
-export const compile = (ast: AstNode): Intermediate => {
+export const compile = (intermediate: Intermediate): Intermediate => {
+    if (intermediate.type !== "AST") {
+        throw Error("Compiler expected ast but got " + intermediate.type);
+    }
+    const ast = intermediate.ast;
+
     const variableList: Array<string> = []
 
     const getVariableAddress = (variable: string) => {
@@ -91,5 +96,5 @@ export const compile = (ast: AstNode): Intermediate => {
         }
     })
 
-    return { type: "Opcodes", value: { program, variableList } };
+    return { type: "Opcodes", opcodes: { program, variableList } };
 }

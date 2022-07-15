@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Collapsible from './Collapsible';
 import { AstNode } from './lang-w/parse';
-import { ExecutionStep, Intermediate, pipeline, Result } from './lang-w/pipeline';
+import { ExecutionStep, Intermediate, Pipeline, pipeline, Result } from './lang-w/pipeline';
 
 const AstTree = (props: {root: AstNode} ) => {
   const rootChildren = props.root.children();
@@ -55,27 +55,34 @@ function App() {
       } catch (e: any) {
         console.log(e);
         setErrorMessage(e.message);
+        setIntermediates([]);
       }
     } else {
       setErrorMessage("Unsupported pipeline");
     }
   }, [pipelineName, code]);
 
+  var pl: Pipeline|undefined = undefined
+  if (pipelineName === "Interpreter" || pipelineName === "Abstract Machine") {
+    pl = pipeline(pipelineName);
+  } else {
+    setErrorMessage("Unsupported pipeline");
+  }
+
   const runCode = () => {
-    if (pipelineName === "Interpreter" || pipelineName === "Abstract Machine") {
-      try {
-        setErrorMessage(undefined);
-        const pl = pipeline(pipelineName);
-        setResult(pl.executionStep(intermediates[intermediates.length - 1].value));
-      } catch (e: any) {
-        console.log(e);
-        setErrorMessage(e.message);
-      }
-    } else {
+    if (pl === undefined) {
       setErrorMessage("Unsupported pipeline");
+      return;
+    }
+
+    try {
+      setErrorMessage(undefined);
+      setResult(pl.executionStep(intermediates[intermediates.length - 1].value));
+    } catch (e: any) {
+      console.log(e);
+      setErrorMessage(e.message);
     }
   }
-  console.log(result);
 
   const resultElements: any = []
   result.forEach((value, key) => 
@@ -85,6 +92,8 @@ function App() {
       <span className='flex-auto'>{value}</span>
     </div>)
   )
+
+  const canRun = pl !== undefined && pl.compilationSteps.length === intermediates.length;
 
   return (
     <div className='flex flex-col m-4 space-y-2'>
@@ -134,7 +143,7 @@ function App() {
           </div>
         </>*/
       }
-      <button className='mt-4 font-bold border-2 bg-green-600 h-10 w-16' onClick={runCode}>Run</button>
+      <button className={`mt-4 font-bold border-2 ${canRun ? "bg-green-600" : "bg-gray-400"} h-10 w-16`} onClick={runCode} disabled={!canRun}>Run</button>
       {
         result.size > 0 && <Collapsible name="Result:">
           <div className='flex flex-col space-y-1'>

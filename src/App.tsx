@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import CollapsibleComponent from './components/CollapsibleComponent';
+import InputComponent from './components/InputComponent';
 import IntermediateComponent from './components/IntermediateComponent';
 import { Intermediate, Pipeline, pipeline, Result } from './lang-w/pipeline';
 
@@ -57,19 +58,16 @@ function App() {
 
   const canRun = pl !== undefined && pl.compilationSteps.length === intermediates.length;
 
+  const inputChanged = (code: string, pipeline: string) => { 
+    setCode(code); 
+    setPipelineName(pipeline); 
+  }
+
   return (
     <div className='flex flex-col m-4 space-y-2'>
       <h1 className='text-3xl font-bold'>LangW</h1>
       <p>This websites provides some tools to work with the simple programming language LangW and to visualize basic compiler concepts.</p>
-      <p className='mt-4 font-bold'>Your code:</p>
-      <textarea className='border-2 h-36' onChange={e => setCode(e.target.value)}></textarea>
-      <div className='flex flex-row'>
-        <span className='flex-none text-bold mr-4'>Pipeline: </span>
-        <select className='flex-auto border-2' value={pipelineName} onChange={e => setPipelineName(e.target.value)}>
-          <option value="Interpreter">Interpreter</option>
-          <option value="Abstract Machine">Abstract Machine</option>
-        </select>
-      </div>
+      <InputComponent code={code} pipeline={pipelineName} inputChanged={inputChanged}></InputComponent>
       <>
         { intermediates.map((intermediate, i) => 
           <CollapsibleComponent key={i} name={intermediate.type}>

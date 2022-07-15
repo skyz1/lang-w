@@ -11,7 +11,6 @@ const AstComponent = (props: {root: AstNode} ) => {
         return node.type;
       } else if (children.length === 1) {
         const chain = nodeToString(children[0]);
-        console.log(chain)
         if (chain !== undefined) {
           return node.type + " - " + chain;
         }

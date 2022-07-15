@@ -71,7 +71,6 @@ export const interpret = (intermediate: Intermediate): Result => {
             case "&":
                 return interpretNodeWithResult(ast.left) !== 0 && interpretNodeWithResult(ast.right) !== 0 ? 1 : 0;
             case "not":
-                console.log(interpretNodeWithResult(ast.factor) === 0 ? 1 : 0);
                 return interpretNodeWithResult(ast.factor) === 0 ? 1 : 0;
             case "number":
                 return ast.value;

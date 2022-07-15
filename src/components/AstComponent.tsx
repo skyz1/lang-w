@@ -2,33 +2,28 @@ import { useState } from 'react';
 import { AstNode } from './../lang-w/parse';
 
 
-const AstComponent = (props: {root: AstNode} ) => {
-    const rootChildren = props.root.children();
-  
-    const nodeToString = (node: AstNode): string|undefined => {
-      const children = node.children();
-      if (children.length === 0) {
-        return node.type;
-      } else if (children.length === 1) {
-        const chain = nodeToString(children[0]);
-        if (chain !== undefined) {
-          return node.type + " - " + chain;
-        }
-      }
-      return undefined;
+const AstComponent = ({root}: {root: AstNode} ) => {
+    const [collapsed, setCollapsed] = useState(false);
+    
+    const rootChildren = root.children();
+    var text: string = root.type;
+    switch (root.type) {
+      case "number":
+        text = String(root.value);
+        break;
+      case "boolean":
+        text = String(root.value);
+        break;
+      case "identifier":
+        text = root.identifier;
+        break;
     }
   
-    const [collapsed, setCollapsed] = useState(nodeToString(props.root) !== undefined);
-  
-    const compressed = nodeToString(props.root)
-  
     if (rootChildren.length === 0) {
-      return <>
-        <span className={'flex-auto mt-2 p-1 border-2 border-black bg-blue-400 text-center'}>{props.root.type}</span>
-      </>
+      return <span className={'flex-auto mt-2 p-1 border border-black bg-blue-400 text-center'}>{text}</span>
     } else {
       return <span className={'flex-none w-fit'}>
-        <div className={'border-gray-400 mt-2 p-1 border-2 border-black bg-blue-400 w-full text-center'} onClick={() => setCollapsed(c => !c)}>{(collapsed && compressed ? compressed : props.root.type)}</div>
+        <div className={'mt-2 p-1 border border-black bg-blue-400 w-full text-center'} onClick={() => setCollapsed(c => !c)}>{text}</div>
         {collapsed || <span className='flex flex-nowrap w-full space-x-2'>
           {rootChildren.map((child, i) => <AstComponent root={child} key={"child-" + i}></AstComponent>)}
         </span>}

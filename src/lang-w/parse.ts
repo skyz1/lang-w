@@ -1,17 +1,18 @@
 import { Intermediate } from './pipeline'
 import { Token } from './tokenize'
 
-export type AstNode = {
-    type: string,
+export type AstNode = SequenceNode|StatementNode|CalculationNode
+
+export type Children = {
     children: () => Array<AstNode>
 }
 
-const AstNode = (value: string) => ({ type: value, children: () => [] })
+const EmptyNode = () => ({ children: () => [] })
 
 export type SequenceNode = {
     type: "sequence",
     statements: Array<StatementNode>
-} & AstNode
+} & Children
 
 const SequenceNode = (statements: Array<StatementNode>): SequenceNode => {
     return {
@@ -27,7 +28,7 @@ export type AssignmentNode = {
     type: "assignment",
     identifier: IdentifierNode,
     calculation: CalculationNode
-} & AstNode
+} & Children
 
 const AssignmentNode = (identifier: IdentifierNode, calculation: CalculationNode): AssignmentNode => ({
     type: "assignment",
@@ -38,7 +39,7 @@ const AssignmentNode = (identifier: IdentifierNode, calculation: CalculationNode
 
 export type SkipNode = { 
     type: "skip"
-} & AstNode
+} & Children
 
 const SkipNode = (): SkipNode => {
     return {
@@ -51,7 +52,7 @@ export type WhileNode = {
     type: "while",
     head: CalculationNode,
     body: SequenceNode,
-} & AstNode
+} & Children
 
 const WhileNode = (head: CalculationNode, body: SequenceNode): WhileNode => ({
     type: "while",
@@ -65,7 +66,7 @@ export type IfNode = {
     condition: CalculationNode,
     consequence: SequenceNode,
     alternative: SequenceNode
-} & AstNode
+} & Children
 
 const IfNode = (condition: CalculationNode, consequence: SequenceNode, alternative: SequenceNode): IfNode => ({
     type: "if",
@@ -81,7 +82,14 @@ export type ComparisonNode = {
     type: "<="|">="|"<>"|"<"|">"|"=",
     left: ExpressionNode,
     right: ExpressionNode
-} & AstNode
+} & Children
+
+const ComparisonNode = (left: ExpressionNode, comparator: "<="|">="|"<>"|"<"|">"|"=", right: ExpressionNode): ComparisonNode => ({
+    type: comparator,
+    left: left,
+    right: right,
+    children: () => [left, right]
+})
 
 export type ExpressionNode = TermNode | LowPriorityOperationNode
 
@@ -89,7 +97,7 @@ export type LowPriorityOperationNode = {
     type: "+"|"-"|"|",
     left: ExpressionNode,
     right: TermNode
-} & AstNode
+} & Children
 
 const LowPriorityOperationNode = (left: ExpressionNode, operator: "+"|"-"|"|", right: TermNode): LowPriorityOperationNode => ({
     type: operator,
@@ -104,7 +112,7 @@ export type HighPriorityOperationNode = {
     type: "*"|"/"|"&",
     left: TermNode,
     right: FactorNode
-} & AstNode
+} & Children
 
 const HighPriorityOperationNode = (left: TermNode, operator: "*"|"/"|"&", right: FactorNode): HighPriorityOperationNode => ({
     type: operator,
@@ -118,7 +126,7 @@ export type FactorNode = NotNode | NumberNode | IdentifierNode | BooleanNode | P
 export type NotNode = {
     type: "not",
     factor: FactorNode
-} & AstNode
+} & Children
 
 const NotNode = (factor: FactorNode): NotNode => ({
     type: "not",
@@ -129,52 +137,45 @@ const NotNode = (factor: FactorNode): NotNode => ({
 export type NumberNode = {
     type: "number",
     value: number
-} & AstNode
+} & Children
 
 const NumberNode = (value: number): NumberNode => ({
     type: "number",
     value: value,
-    children: () => [AstNode(String(value))]
+    children: () => []
 })
 
 export type IdentifierNode = {
     type: "identifier",
     identifier: string
-} & AstNode
+} & Children
 
 const IdentifierNode = (identifier: string): IdentifierNode => ({
     type: "identifier",
     identifier: identifier,
-    children: () => [AstNode(identifier)]
+    children: () => []
 })
 
 export type BooleanNode = {
     type: "boolean",
     value: boolean
-} & AstNode
+} & Children
 
 const BooleanNode = (value: boolean): BooleanNode => ({
     type: "boolean",
     value: value,
-    children: () => [AstNode(String(value))]
+    children: () => []
 })
 
 export type ParenthesizedCalculationNode = {
     type: "parenthesized_calculation",
     calculation: CalculationNode
-} & AstNode
+} & Children
 
 const ParenthesizedCalculationNode = (calculation: CalculationNode): ParenthesizedCalculationNode => ({
     type: "parenthesized_calculation",
     calculation: calculation,
     children: () => [calculation]
-})
-
-const ComparisonNode = (left: ExpressionNode, comparator: "<="|">="|"<>"|"<"|">"|"=", right: ExpressionNode): ComparisonNode => ({
-    type: comparator,
-    left: left,
-    right: right,
-    children: () => [left, right]
 })
 
 export const parse = (tokens: Array<Token>): Intermediate => {

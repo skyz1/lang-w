@@ -1,6 +1,5 @@
 import { Token } from '../lang-w/tokenize';
 
-
 const TokensComponent = (props: {tokens: Array<Token>} ) => {
     return <>
         {props.tokens.map((token, i) => 

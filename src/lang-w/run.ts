@@ -1,5 +1,5 @@
 import { Instruction, Program } from './compile'
-import { Intermediate, Result } from './pipeline'
+import { Result } from './pipeline'
 
 type AbstractMachine = {
     instructions: Program,

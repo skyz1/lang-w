@@ -223,9 +223,15 @@ export const parse = (intermediate: Intermediate): Intermediate => {
     }
 
     const parseBoolean = (): BooleanNode => {
-        const booleanstring = currentToken().text;
+        const booleanString = currentToken().text;
         consume("boolean");
-        return BooleanNode(Boolean(booleanstring));
+        if (booleanString === "true") {
+            return BooleanNode(true);
+        } else if (booleanString === "false") {
+            return BooleanNode(false);
+        } else {
+            throw Error("Boolean token was neither true or false");
+        }
     }
 
     const parseParenthesizedCalculation = (): ParenthesizedCalculationNode => {

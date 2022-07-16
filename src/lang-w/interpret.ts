@@ -1,7 +1,7 @@
 import { IfNode, WhileNode, AstNode } from './parse';
 import { Intermediate, Result } from './pipeline';
 
-export const interpret = (intermediate: Intermediate): Result => {
+export const interpret = async (intermediate: Intermediate): Promise<Result> => {
     if (intermediate.type !== "AST") {
         throw Error("Interpreter expected ast but got " + intermediate.type);
     }

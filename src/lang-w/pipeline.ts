@@ -11,7 +11,7 @@ export type Pipeline = {
 }
 
 export type CompilationStep = (intermediate: Intermediate) => Intermediate
-export type ExecutionStep = (executable: Intermediate) => Result
+export type ExecutionStep = (executable: Intermediate) => Promise<Result>
 
 export type Intermediate = CodeIntermediate|TokenIntermediate|AstIntermediate|OpcodeIntermediate
 
@@ -39,7 +39,7 @@ export type Result = Map<string, number>
 
 export const pipeline = (name: "Interpreter"|"Abstract Machine"): Pipeline => {
     var compilationSteps: Array<CompilationStep> = [];
-    var executionStep: ExecutionStep = (executable: any) => new Map<string, number>();
+    var executionStep: ExecutionStep = async (executable: any) => new Map<string, number>();
 
     switch (name) {
         case "Interpreter":

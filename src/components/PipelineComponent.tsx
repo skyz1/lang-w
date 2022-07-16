@@ -16,18 +16,18 @@ function PipelineComponent(props: {code: string, pipeline: string}) {
         const pl = pipeline(props.pipeline);
         [intermediates, compilationError] = pl.runPipeline(props.code);
         runCode = () => {
-            try {
-                setRuntimeError(undefined);
-                const res = pl.executionStep(intermediates[intermediates.length - 1]);
+            pl.executionStep(intermediates[intermediates.length - 1]).then(res => {
                 const newResult: Array<{ variable: string, value: number }> = [];
                 res.forEach((value, variable) => {
                     newResult.push({variable, value});
                 });
                 setResult(newResult);
-            } catch (e: any) {
+                setRuntimeError(undefined);
+            }).catch(e => {
+                console.log(e);
                 setResult([]);
                 setRuntimeError(e.message);
-            }
+            });
         }
     } else {
         compilationError = "Unsupported pipeline";

@@ -17,7 +17,7 @@ const AbstractMachine = (program: Program): AbstractMachine => {
     }
 }
 
-export const run = (intermediate: Intermediate): Result => {
+export const run = async (intermediate: Intermediate): Promise<Result> => {
     if (intermediate.type !== "Opcodes") {
         throw Error("AM expected opcodes but got " + intermediate.type);
     }

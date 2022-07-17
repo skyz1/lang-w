@@ -1,20 +1,37 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CollapsibleComponent from './CollapsibleComponent';
 import IntermediateComponent from './IntermediateComponent';
 import { Intermediate, pipeline } from '../lang-w/pipeline';
+import { Token } from '../lang-w/tokenize';
 
-function PipelineComponent(props: {code: string, pipeline: string}) {
+function PipelineComponent(props: {code: string, pipeline: string, onTokensGenerated: (tokens: Array<Token>) => void}) {
     const [runtimeError, setRuntimeError] = useState<string|undefined>(undefined);
     const [result, setResult] = useState<Array<{ variable: string, value: number }>>([]);
+    
+    const pl = useMemo(() => {
+        if (props.pipeline === "Interpreter" || props.pipeline === "Abstract Machine" || props.pipeline === "WASM") {
+            return pipeline(props.pipeline);
+        }
+    }, [props.pipeline]);
+    
+    const [intermediates, compilationError] = useMemo(() => {
+        if (pl) {
+            return pl.runPipeline(props.code);
+        } else {
+            return [[], "Unsupported pipeline"];
+        }
+    }, [props.code, pl]);
 
-    var intermediates: Array<Intermediate> = [];
-    var compilationError: string|undefined = undefined;
+    useEffect(() => {
+        intermediates.forEach(intermediate => {
+            if (intermediate.type === "Tokens") {
+                props.onTokensGenerated(intermediate.tokens);
+            }
+        });
+    }, [intermediates]);
 
     var runCode = () => {}
-
-    if (props.pipeline === "Interpreter" || props.pipeline === "Abstract Machine" || props.pipeline === "WASM") {
-        const pl = pipeline(props.pipeline);
-        [intermediates, compilationError] = pl.runPipeline(props.code);
+    if (pl) {
         runCode = () => {
             pl.executionStep(intermediates[intermediates.length - 1]).then(res => {
                 const newResult: Array<{ variable: string, value: number }> = [];
@@ -29,8 +46,6 @@ function PipelineComponent(props: {code: string, pipeline: string}) {
                 setRuntimeError(e.message);
             });
         }
-    } else {
-        compilationError = "Unsupported pipeline";
     }
 
     var lastResult = undefined;

@@ -7,14 +7,18 @@ I made this project to learn react and to better understand programming language
 You can try out the project [here](https://skyz1.github.io/lang-w/).
 
 ## Project Setup
-Clone the project from github using
+Clone the project from github:
 ```
 git clone git@github.com:skyz1/lang-w.git
 ```
-
-Run the app in the development mode.
+Install all dependencies:
 ```
-npm run build
+npm install
+```
+
+Run the app in the development mode:
+```
+npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.

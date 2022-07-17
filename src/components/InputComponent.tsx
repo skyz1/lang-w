@@ -23,17 +23,25 @@ function InputComponent(props: { code: string, pipeline: string, tokens: Array<T
 
     return <>
         <p className='mt-4 font-bold'>Your code:</p>
-        <div className='border-x-2 border-t-2 h-fit relative overflow-y-auto'>
-            <div className='h-fit w-fit min-w-full z-0 relative'>
-                <div className='h-fit w-full font-mono resize-none z-10 relative'>
-                    {coloredLines.map((line, i, arr) => <div key={i} className={"flex flex-row leading-[30px] border-b-2"}>
-                            <span className='pr-2 w-11 font-bold border-r mr-1 text-right flex-shrink-0'>{i}</span>
-                            <>{line.map(subline => <span className={subline.color}>{subline.text}</span>)}</>
-                        </div>
-                    )}
+        <div className='border-2 h-fit w-full relative font-mono flex flex-row'>
+            <div className='border-r relative bg-gray-100'>
+                {coloredLines.map((line, i, arr) => 
+                    <div key={i} className={"leading-8 font-bold text-right px-2"}>{i}</div>
+                )}
+            </div>
+            <div className='w-full z-0 relative overflow-y-auto'>
+                <div className='h-fit w-fit min-w-full z-0 relative'>
+                    <div className='h-fit w-fullresize-none z-10 relative'>
+                        {coloredLines.map((line, i, arr) => 
+                            <div key={i} className={"leading-8 px-2"}>
+                                <>{line.map(subline => <span className={subline.color}>{subline.text}</span>)}</>
+                                <br></br>
+                            </div>
+                        )}
+                    </div>
+                    <textarea className='text-transparent h-full w-full caret-black resize-none absolute bg-transparent px-2 leading-8 overflow-y-hidden absolute top-0 outline-0 z-50 selection:text-tranparent selection:bg-blue-700/25' 
+                        onChange={e => props.inputChanged(e.target.value, props.pipeline)} value={props.code} spellCheck={false} wrap="off" autoCapitalize='off' autoComplete='off' autoCorrect='off'></textarea>
                 </div>
-                <textarea className='text-transparent h-full w-full caret-black font-mono resize-none absolute bg-transparent pl-12 leading-[32px] overflow-y-hidden absolute top-0 outline-0 z-50 selection:text-tranparent selection:bg-blue-700/25' 
-                    onChange={e => props.inputChanged(e.target.value, props.pipeline)} value={props.code} spellCheck={false} wrap="off" autoCapitalize='off' autoComplete='off' autoCorrect='off'></textarea>
             </div>
         </div>
         <div className='flex flex-row'>

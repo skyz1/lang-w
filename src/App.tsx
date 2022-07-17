@@ -15,7 +15,6 @@ function App() {
   }
 
   const tokensGenerated = (tokens: Array<Token>) => { 
-    console.log(tokens);
     setTokens(tokens); 
   }
 

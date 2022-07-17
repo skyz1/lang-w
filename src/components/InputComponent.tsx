@@ -1,25 +1,34 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Token } from '../lang-w/tokenize';
 
 function InputComponent(props: { code: string, pipeline: string, tokens: Array<Token>, inputChanged: (code: string, pipeline: string) => void }) {
-    const coloredLines: Array<Array<{text: string, color: string}>> = [[]]
-    var lastIndex = 0;
+    const [coloredLines, setColoredLines] = useState<Array<Array<{text: string, color: string}>>>([[]]);
 
-    props.tokens.forEach(token => {
-        if (lastIndex < token.index) {
-            const lines = props.code.substring(lastIndex, token.index).split("\n");
-            lines.forEach((line, i, arr) => {
-                if (line !== "") {
-                    coloredLines[coloredLines.length-1].push({text: line, color: "text-black"});
+    useEffect(() => {
+        if (props.tokens.length > 0) {
+            const cl: Array<Array<{text: string, color: string}>> = [[]]
+            var lastIndex = 0;
+            props.tokens.forEach(token => {
+                if (lastIndex < token.index) {
+                    const lines = props.code.substring(lastIndex, token.index).split("\n");
+                    lines.forEach((line, i, arr) => {
+                        if (line !== "") {
+                            cl[cl.length-1].push({text: line, color: "text-black"});
+                        }
+                        if (i < arr.length - 1) {
+                            cl.push([]);
+                        }
+                        lastIndex = token.index;
+                    });
                 }
-                if (i < arr.length - 1) {
-                    coloredLines.push([]);
-                }
-                lastIndex = token.index;
+                cl[cl.length-1].push({text: token.text, color: token.color});
+                lastIndex += token.text.length;
             });
+            setColoredLines(cl);
+        } else if (props.code.trim() === "") {
+            setColoredLines([...props.code.split("\n").map(line => [{text: line, color: "text-black"}])]);
         }
-        coloredLines[coloredLines.length-1].push({text: token.text, color: token.color});
-        lastIndex += token.text.length;
-    });
+    }, [props.code, props.tokens]);
 
     return <>
         <p className='mt-4 font-bold'>Your code:</p>

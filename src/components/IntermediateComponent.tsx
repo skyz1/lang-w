@@ -11,7 +11,9 @@ function IntermediateComponent({intermediate}: {intermediate: Intermediate}) {
     case "Tokens":
       return <TokensComponent tokens={intermediate.tokens}></TokensComponent>
     case "AST":
-      return <AstComponent root={intermediate.ast}></AstComponent>
+      return <div className='mx-2 mb-2 flex'>
+          <AstComponent root={intermediate.ast}></AstComponent>
+        </div>
     case "Opcodes":
       return <OpcodeComponent program={intermediate.opcodes.program}></OpcodeComponent>
       case "WASM":

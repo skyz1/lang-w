@@ -10,14 +10,23 @@ const WasmComponent = ({wasm}: {wasm: WasmProgram} ) => {
         instructions.push({bytes, text, index})
     });
 
-    return <>
-        {instructions.map((instruction, i) => 
-            <div key={i} className={"flex flex-row"}>
-                <span className='w-12 shrink-0'>{instruction.index}</span>
-                <span className='w-32 shrink-0'>{instruction.bytes}</span>
-                <span className='flex-auto'>{instruction.text}</span>
-            </div>
-        )}
-    </>
+    return <table>
+        <thead>
+            <tr>
+                <th>Index</th>
+                <th>Bytes</th>
+                <th className="w-full">Info</th>
+            </tr>
+        </thead>
+        <tbody>
+            {instructions.map((instruction, i) => 
+                <tr key={i}>
+                    <td>{instruction.index}</td>
+                    <td>{instruction.bytes}</td>
+                    <td>{instruction.text}</td>
+                </tr>
+            )}
+        </tbody>
+    </table>
 }
 export default WasmComponent;

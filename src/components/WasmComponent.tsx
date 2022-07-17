@@ -13,8 +13,8 @@ const WasmComponent = ({wasm}: {wasm: WasmProgram} ) => {
     return <>
         {instructions.map((instruction, i) => 
             <div key={i} className={"flex flex-row"}>
-                <span className='w-12'>{instruction.index}</span>
-                <span className='w-32'>{instruction.bytes}</span>
+                <span className='w-12 shrink-0'>{instruction.index}</span>
+                <span className='w-32 shrink-0'>{instruction.bytes}</span>
                 <span className='flex-auto'>{instruction.text}</span>
             </div>
         )}

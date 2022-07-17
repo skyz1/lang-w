@@ -52,7 +52,7 @@ function PipelineComponent(props: {code: string, pipeline: string, onTokensGener
     if (result.length > 0) {
         lastResult = <div className='flex flex-col space-y-1'>
             {result.map(({variable, value}) => 
-                <div key={"result-" + value} className={"flex flex-row"}>
+                <div key={value} className={"flex flex-row"}>
                     <span className='w-12'>{variable}</span>
                     <span className='flex-auto'>{value}</span>
                 </div>)}

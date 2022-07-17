@@ -25,7 +25,7 @@ const AstComponent = ({root}: {root: AstNode} ) => {
       return <span className={'flex-none w-fit h-fit'}>
         <div className={'mt-2 p-1 border border-black bg-blue-400 w-full text-center'} onClick={() => setCollapsed(c => !c)}>{text}</div>
         {collapsed || <span className='flex flex-nowrap w-full space-x-2'>
-          {rootChildren.map((child, i) => <AstComponent root={child} key={"child-" + i}></AstComponent>)}
+          {rootChildren.map((child, i) => <AstComponent root={child} key={i}></AstComponent>)}
         </span>}
       </span>
     }

@@ -6,61 +6,111 @@ export type WasmProgram = {
     text: Array<{ index: number, text: string}>,
 }
 
-const moduleHeader = [0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]
+type AnnotatedWasm = {
+    instruction: Array<number>,
+    annotation: string,
+}
 
-const emptyArray = 0x00
+const annotate = (annotation: string, ...instruction: Array<number>): AnnotatedWasm => ({instruction, annotation})
+
+const combine = (...instructions: Array<AnnotatedWasm>): AnnotatedWasm => ({instruction: instructions.flatMap(instruction => instruction.instruction), annotation: instructions.map(instruction => instruction.annotation).join(" ")})
+const addPrefix = (prefix: string, instruction: AnnotatedWasm): AnnotatedWasm => ({instruction: instruction.instruction, annotation: prefix + instruction.annotation})
+const addExtra = (extra: string, instruction: AnnotatedWasm): AnnotatedWasm => ({instruction: instruction.instruction, annotation: instruction.annotation + " (" + extra + ")"})
+
+const moduleHeader = [annotate("Magic number", 0x00, 0x61, 0x73, 0x6d), annotate("Version", 0x01, 0x00, 0x00, 0x00)]
+
+const emptyArray = annotate("Empty vector", 0x00)
 
 const sectionType = {
-    type: 1,
-    import: 2,
-    function: 3,
-    export: 7,
-    code: 10,
+    type: annotate("Type section", 1),
+    import: annotate("Import section", 2),
+    function: annotate("Function section", 3),
+    export: annotate("Export section", 7),
+    code: annotate("Code section", 10)
 }
 
 const wasmInstruction = {
-    nop: 0x01,
+    nop: annotate("nop", 0x01),
 
-    block: 0x02,
-    loop: 0x03,
-    if: 0x04,
-    else: 0x05,
-    end: 0x0b,
-    br: 0x0c,
-    br_if: 0x0d,
+    block: annotate("block", 0x02),
+    loop: annotate("loop", 0x03),
+    if: annotate("if", 0x04),
+    else: annotate("else", 0x05),
+    end: annotate("end", 0x0b),
+    br: annotate("br", 0x0c),
+    br_if: annotate("br_if", 0x0d),
 
-    call: 0x10,
+    call: annotate("call", 0x10),
 
-    get: 0x20,
-    set: 0x21,
+    get: annotate("get", 0x20),
+    set: annotate("set", 0x21),
 
-    i32: 0x41,
+    i32: annotate("i32", 0x41),
 
-    eqz: 0x44,
+    eqz: annotate("eqz", 0x44),
 
-    eq: 0x46,
-    ne: 0x47,
-    lt: 0x48,
-    gt: 0x4a,
-    le: 0x4c,
-    ge: 0x4e,
+    eq: annotate("eq", 0x46),
+    ne: annotate("ne", 0x47),
+    lt: annotate("lt", 0x48),
+    gt: annotate("gt", 0x4a),
+    le: annotate("le", 0x4c),
+    ge: annotate("ge", 0x4e),
 
-    add: 0x6a,
-    sub: 0x6b,
-    mul: 0x6c,
-    div: 0x6d,
-    and: 0x71,
-    or: 0x72,
+    add: annotate("add", 0x6a),
+    sub: annotate("sub", 0x6b),
+    mul: annotate("mul", 0x6c),
+    div: annotate("div", 0x6d),
+    and: annotate("and", 0x71),
+    or: annotate("or", 0x72),
 }
 
 const type = {
-    i32: 0x7f,
-    void: 0x40,
-    func: 0x60
+    i32: annotate("Type i32", 0x7f),
+    void: annotate("Type void", 0x40),
+    func: annotate("Type func", 0x60),
 }
 
 const ioType = {
-    func: 0x00
+    func: annotate("Func", 0x00)
+}
+const byteSize = (instructions: Array<AnnotatedWasm>) => {
+    return instructions.map(aWasm => aWasm.instruction.length).reduce((total, instructionLength) => total + instructionLength);
+}
+
+const str = (str: string): Array<AnnotatedWasm> => [annotate("String length " + str.length, ...u32(str.length).instruction), annotate('String "' + str + '"', ...str.split("").map(c => c.charCodeAt(0)))]
+
+const u32 = (value: number): AnnotatedWasm => {
+    const str = value.toString();
+    value |= 0;
+    const result = [];
+    do {
+        const b = value & 0x7f;
+        value >>= 7;
+        result.push(b | (value && 0x80));
+    } while (value != 0);
+    return annotate(str, ...result);
+}
+
+const s32 = (value: number): AnnotatedWasm => {
+    const str = value.toString();
+    value |= 0;
+    const result = [];
+    while (true) {
+        const b = value & 0x7f;
+        value >>= 7;
+        if ((value === 0 && (b & 0x40) === 0) || (value === -1 && (b & 0x40) !== 0)) {
+        result.push(b);
+        return annotate(str, ...result);
+        }
+        result.push(b | 0x80);
+    }
+}
+
+const vector = (...contents: Array<Array<AnnotatedWasm>>): Array<AnnotatedWasm> => [annotate("Vector length " + contents.length, ...u32(contents.length).instruction), ...contents.flat()]
+
+const section = (type: AnnotatedWasm, ...contents: Array<Array<AnnotatedWasm>>): Array<AnnotatedWasm> => {
+    const v = vector(...contents);
+    return [type, addPrefix("Section size ", u32(byteSize(v))), ...v];
 }
 
 export const compileWasm = (intermediate: Intermediate): Intermediate => {
@@ -69,12 +119,7 @@ export const compileWasm = (intermediate: Intermediate): Intermediate => {
     }
     const ast = intermediate.ast;
 
-    const program: Array<number> = []; // Magic number + Version
-
-    const text: Array<{ index: number, text: string }> = []
-    const addText = (str: string) => {
-        text.push({ index: program.length, text: str });
-    }
+    const program: Array<AnnotatedWasm> = [];
 
     const variableList: Array<string> = [];
     const getVariableAddress = (variable: string) => {
@@ -83,54 +128,20 @@ export const compileWasm = (intermediate: Intermediate): Intermediate => {
             return variableList.push(variable) - 1;
         }
         return index;
-    }
+    }    
 
-    const str = (str: string): Array<number> => [str.length, ...str.split("").map(c => c.charCodeAt(0))]
-
-    const u32 = (value: number): Array<number> => {
-        value |= 0;
-        const result = [];
-        do {
-            const b = value & 0x7f;
-            value >>= 7;
-            result.push(b | (value && 0x80));
-        } while (value != 0);
-        return result;
-    }
-
-    const s32 = (value: number): Array<number> => {
-        value |= 0;
-        const result = [];
-        while (true) {
-          const b = value & 0x7f;
-          value >>= 7;
-          if ((value === 0 && (b & 0x40) === 0) || (value === -1 && (b & 0x40) !== 0)) {
-            result.push(b);
-            return result;
-          }
-          result.push(b | 0x80);
-        }
-    }
-
-    const vector = (...contents: Array<Array<number>>) => [...u32(contents.length), ...contents.flat()]
-
-    const section = (type: number, ...contents: Array<Array<number>>): Array<number> => {
-        const v = vector(...contents);
-        return [type, ...u32(v.length), ...v];
-    }
-
-    const compileNode = (ast: AstNode): Array<number> => {
+    const compileNode = (ast: AstNode): Array<AnnotatedWasm> => {
         switch (ast.type) {
             case "sequence":
                 return ast.statements.flatMap(statement => compileNode(statement));
             case "assignment":
-                return [...compileNode(ast.calculation), wasmInstruction.set, ...u32(getVariableAddress(ast.identifier.identifier))];
+                return [...compileNode(ast.calculation), combine(wasmInstruction.set, u32(getVariableAddress(ast.identifier.identifier)))];
             case "skip":
                 return [wasmInstruction.nop];
             case "while":
                 const head = compileNode(ast.head);
                 const body = compileNode(ast.body);
-                return [wasmInstruction.loop, type.void, ...head, wasmInstruction.br_if, ...u32(0), ...body, wasmInstruction.end];
+                return [wasmInstruction.loop, type.void, ...head, wasmInstruction.br_if, u32(0), ...body, wasmInstruction.end];
             case "if":
                 const condition = compileNode(ast.condition);
                 const consequence = compileNode(ast.consequence);
@@ -151,11 +162,11 @@ export const compileWasm = (intermediate: Intermediate): Intermediate => {
             case "not":
                 return [...compileNode(ast.factor), wasmInstruction.eqz];
             case "number":
-                return [wasmInstruction.i32, ...s32(ast.value)];
+                return [combine(wasmInstruction.i32, s32(ast.value))];
             case "identifier":
-                return [wasmInstruction.get, ...u32(getVariableAddress(ast.identifier))];
+                return [wasmInstruction.get, u32(getVariableAddress(ast.identifier))];
             case "boolean":
-                return [wasmInstruction.i32, ...s32(ast.value ? 0 : 1)];
+                return [wasmInstruction.i32, s32(ast.value ? 0 : 1)];
             case "parenthesized_calculation":
                 return compileNode(ast.calculation);
             case "<=":
@@ -175,25 +186,22 @@ export const compileWasm = (intermediate: Intermediate): Intermediate => {
         }
     }
 
-    addText("Module Header");
     program.push(...moduleHeader); // Magic value + version
-
-    addText("Type section");
     program.push(...section(sectionType.type, [type.func, ...vector([type.i32]), emptyArray], [type.func, emptyArray, emptyArray])); // Type section: [0: (i32) => void, 1: () => void]
+    program.push(...section(sectionType.import, [...str("js"), ...str("ret"), ioType.func, addPrefix("Type ", u32(0))])); // Import section: func js.ret typ 0
+    program.push(...section(sectionType.function, [addPrefix("Type ", u32(1))])); // Function section: [0: () => void]
+    program.push(...section(sectionType.export, [...str("main"), ioType.func, addPrefix("Type ", u32(1))])); // Export section: main with type 1
+    const code = [...compileNode(ast), ...variableList.flatMap(variable => [combine(wasmInstruction.get, u32(getVariableAddress(variable))), addExtra("ret", combine(wasmInstruction.call, u32(0)))])];
+    const func = [...vector([u32(variableList.length), type.i32]), ...code, wasmInstruction.end];
+    program.push(...section(sectionType.code, [addPrefix("Function size ", u32(byteSize(func))), ...func])); // Code section: body for func at 0
 
-    addText("Import section");
-    program.push(...section(sectionType.import, [...str("js"), ...str("ret"), ioType.func, 0x00])); // Import section: func js.ret typ 0
-    
-    addText("Function section");
-    program.push(...section(sectionType.function, [1])); // Function section: [0: () => void]
-    
-    addText("Export section");
-    program.push(...section(sectionType.export, [...str("main"), ioType.func, 0x01])); // Export section: main with type 1
-    
-    addText("Code section");
-    const code = [...compileNode(ast), ...variableList.flatMap(variable => [wasmInstruction.get, ...u32(getVariableAddress(variable)), wasmInstruction.call, ...u32(0)])];
-    const func = [...vector([...u32(variableList.length), type.i32]), ...code, wasmInstruction.end];
-    program.push(...section(sectionType.code, [...u32(func.length), ...func])); // Code section: body for func at 0
+    const wasmProgram: Array<number> = []
+    const text: Array<{ index: number, text: string}> = []
 
-    return { type: "WASM", wasm: { program: { bytes: Uint8Array.from(program), text: text }, variableList} };
+    program.forEach(annotatedWasm => {
+        text.push({ index: wasmProgram.length, text: annotatedWasm.annotation});
+        wasmProgram.push(...annotatedWasm.instruction);
+    });
+
+    return { type: "WASM", wasm: { program: { bytes: Uint8Array.from(wasmProgram), text: text }, variableList} };
 }

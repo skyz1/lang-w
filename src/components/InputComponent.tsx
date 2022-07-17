@@ -17,6 +17,7 @@ function InputComponent(props: { code: string, pipeline: string, inputChanged: (
             <select className='flex-auto border-2' value={props.pipeline} onChange={e => props.inputChanged(props.code, e.target.value)}>
                 <option value="Interpreter">Interpreter</option>
                 <option value="Abstract Machine">Abstract Machine</option>
+                <option value="WASM">WASM</option>
             </select>
         </div>
     </>

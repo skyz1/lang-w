@@ -12,7 +12,7 @@ function PipelineComponent(props: {code: string, pipeline: string}) {
 
     var runCode = () => {}
 
-    if (props.pipeline === "Interpreter" || props.pipeline === "Abstract Machine") {
+    if (props.pipeline === "Interpreter" || props.pipeline === "Abstract Machine" || props.pipeline === "WASM") {
         const pl = pipeline(props.pipeline);
         [intermediates, compilationError] = pl.runPipeline(props.code);
         runCode = () => {

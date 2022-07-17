@@ -9,7 +9,7 @@ export type Instruction = {
     annotation?: string,
 }
 
-export const compile = (intermediate: Intermediate): Intermediate => {
+export const compileBytecode = (intermediate: Intermediate): Intermediate => {
     if (intermediate.type !== "AST") {
         throw Error("Compiler expected ast but got " + intermediate.type);
     }

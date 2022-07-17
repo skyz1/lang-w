@@ -1,8 +1,10 @@
 import { Token, tokenize } from './tokenize';
-import { compile, Program } from './compile';
+import { compileBytecode, Program } from './compileBytecode';
 import { AstNode, parse } from './parse';
-import { run } from './run';
+import { runBytecode } from './runBytecode';
 import { interpret } from './interpret';
+import { compileWasm, WasmProgram } from './compileWasm';
+import { runWasm } from './runWasm';
 
 export type Pipeline = {
     compilationSteps: Array<CompilationStep>,
@@ -13,7 +15,7 @@ export type Pipeline = {
 export type CompilationStep = (intermediate: Intermediate) => Intermediate
 export type ExecutionStep = (executable: Intermediate) => Promise<Result>
 
-export type Intermediate = CodeIntermediate|TokenIntermediate|AstIntermediate|OpcodeIntermediate
+export type Intermediate = CodeIntermediate|TokenIntermediate|AstIntermediate|OpcodeIntermediate|WasmIntermediate
 
 type CodeIntermediate = {
     type: "Code",
@@ -35,9 +37,14 @@ type OpcodeIntermediate = {
     opcodes: { program: Program, variableList: Array<string> }
 }
 
+type WasmIntermediate = {
+    type: "WASM",
+    wasm: { program: WasmProgram, variableList: Array<string> }
+}
+
 export type Result = Map<string, number>
 
-export const pipeline = (name: "Interpreter"|"Abstract Machine"): Pipeline => {
+export const pipeline = (name: "Interpreter"|"Abstract Machine"|"WASM"): Pipeline => {
     var compilationSteps: Array<CompilationStep> = [];
     var executionStep: ExecutionStep = async (executable: any) => new Map<string, number>();
 
@@ -47,9 +54,13 @@ export const pipeline = (name: "Interpreter"|"Abstract Machine"): Pipeline => {
             executionStep = interpret
             break;
         case "Abstract Machine":
-            compilationSteps = [tokenize, parse, compile]
-            executionStep = run
+            compilationSteps = [tokenize, parse, compileBytecode]
+            executionStep = runBytecode
             break;
+            case "WASM":
+                compilationSteps = [tokenize, parse, compileWasm]
+                executionStep = runWasm
+                break;
     }
 
     const runPipeline = (code: string): [Array<Intermediate>, string|undefined] => {

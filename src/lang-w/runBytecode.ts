@@ -1,4 +1,4 @@
-import { Instruction, Program } from './compile'
+import { Instruction, Program } from './compileBytecode'
 import { Intermediate, Result } from './pipeline'
 
 type AbstractMachine = {
@@ -17,7 +17,7 @@ const AbstractMachine = (program: Program): AbstractMachine => {
     }
 }
 
-export const run = async (intermediate: Intermediate): Promise<Result> => {
+export const runBytecode = async (intermediate: Intermediate): Promise<Result> => {
     if (intermediate.type !== "Opcodes") {
         throw Error("AM expected opcodes but got " + intermediate.type);
     }

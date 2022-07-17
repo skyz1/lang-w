@@ -1,4 +1,4 @@
-import { Program } from '../lang-w/compile';
+import { Program } from '../lang-w/compileBytecode';
 
 const OpcodeComponent = (props: {program: Program} ) => {
     return <>

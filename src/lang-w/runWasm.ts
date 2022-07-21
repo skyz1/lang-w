@@ -16,8 +16,10 @@ export const runWasm = async (intermediate: Intermediate): Promise<Result> => {
     }
 
     return await WebAssembly.instantiate(program.bytes, importObject).then(wasm => {
-        (<any>wasm.instance.exports).main();
-
+        const { table } = <any>wasm.instance.exports;
+        const main = table.get(0);
+        main();
+        
         const finalState: Map<string, number> = new Map<string, number>();
         returnValues.forEach((value, i) => finalState.set(variableList[i], value))
         return finalState;

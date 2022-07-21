@@ -25,7 +25,9 @@ const sectionType = {
     type: annotate("Type section", 1),
     import: annotate("Import section", 2),
     function: annotate("Function section", 3),
+    table: annotate("Table section", 4),
     export: annotate("Export section", 7),
+    elem: annotate("Elem section", 9),
     code: annotate("Code section", 10)
 }
 
@@ -68,10 +70,12 @@ const type = {
     i32: annotate("Type i32", 0x7f),
     void: annotate("Type void", 0x40),
     func: annotate("Type func", 0x60),
+    funcref: annotate("Type funcref", 0x70),
 }
 
 const ioType = {
-    func: annotate("Func", 0x00)
+    func: annotate("Func", 0x00),
+    table: annotate("Table", 0x01)
 }
 const byteSize = (instructions: Array<AnnotatedWasm>) => {
     return instructions.map(aWasm => aWasm.instruction.length).reduce((total, instructionLength) => total + instructionLength);
@@ -190,7 +194,9 @@ export const compileWasm = (intermediate: Intermediate): Intermediate => {
     program.push(...section(sectionType.type, [type.func, ...vector([type.i32]), emptyArray], [type.func, emptyArray, emptyArray])); // Type section: [0: (i32) => void, 1: () => void]
     program.push(...section(sectionType.import, [...str("js"), ...str("ret"), ioType.func, addPrefix("Type ", u32(0))])); // Import section: func js.ret typ 0
     program.push(...section(sectionType.function, [addPrefix("Type ", u32(1))])); // Function section: [0: () => void]
-    program.push(...section(sectionType.export, [...str("main"), ioType.func, addPrefix("Type ", u32(1))])); // Export section: main with type 1
+    program.push(...section(sectionType.table, [type.funcref, annotate("Limit type", 0x01), addPrefix("Initial ", u32(1)), addPrefix("Max ", u32(1))])); // Table section: 1 funcref-table size 1
+    program.push(...section(sectionType.export, [...str("table"), ioType.table, addPrefix("Table ", u32(0))])); // Export section: main with type 1
+    program.push(...section(sectionType.elem, [addPrefix("Segment flags ", u32(0)), addPrefix("Initializer: ", combine(wasmInstruction.i32, u32(0), wasmInstruction.end)), ...vector([addPrefix("Function ", u32(1))])])); // Elem section: main with type 1
     const code = [...compileNode(ast), ...variableList.flatMap(variable => [combine(wasmInstruction.get, u32(getVariableAddress(variable))), addExtra("ret", combine(wasmInstruction.call, u32(0)))])];
     const func = [...vector([u32(variableList.length), type.i32]), ...code, wasmInstruction.end];
     program.push(...section(sectionType.code, [addPrefix("Function size ", u32(byteSize(func))), ...func])); // Code section: body for func at 0

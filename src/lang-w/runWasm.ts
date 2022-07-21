@@ -6,22 +6,28 @@ export const runWasm = async (intermediate: Intermediate): Promise<Result> => {
     }
     const { program, variableList } = intermediate.wasm;
 
-    const returnValues: Array<number> = [];
+    const memory = new WebAssembly.Memory({
+        initial: Math.ceil(variableList.length / (16 * 1024)), 
+        maximum: Math.ceil(variableList.length / (16 * 1024))
+    });
     const importObject = {
         js: {
-            ret(val: number) {
-                returnValues.push(val);
-            }
+            mem: memory
         }
     }
 
     return await WebAssembly.instantiate(program.bytes, importObject).then(wasm => {
         const { table } = <any>wasm.instance.exports;
+        if (!table) {
+            throw Error("WASM instantiation failed");
+        }
+
         const main = table.get(0);
         main();
-        
+
+        const values = new Uint32Array(memory.buffer);
         const finalState: Map<string, number> = new Map<string, number>();
-        returnValues.forEach((value, i) => finalState.set(variableList[i], value))
+        variableList.forEach((variable, i) => finalState.set(variable, values[i]))
         return finalState;
     });
 }

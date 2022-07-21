@@ -10,23 +10,30 @@ const WasmComponent = ({wasm}: {wasm: WasmProgram} ) => {
         instructions.push({bytes, text, index})
     });
 
-    return <table>
-        <thead>
-            <tr>
-                <th>Index</th>
-                <th>Bytes</th>
-                <th className="w-full">Info</th>
-            </tr>
-        </thead>
-        <tbody>
-            {instructions.map((instruction, i) => 
-                <tr key={i}>
-                    <td>{instruction.index}</td>
-                    <td>{instruction.bytes}</td>
-                    <td>{instruction.text}</td>
+    const download = window.URL.createObjectURL(new Blob([wasm.bytes], { type: 'application/octet-stream' }))
+
+    return <>
+        <table>
+            <thead>
+                <tr>
+                    <th>Index</th>
+                    <th className="w-[20%]">Bytes</th>
+                    <th className="w-full">Info</th>
                 </tr>
-            )}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {instructions.map((instruction, i) => 
+                    <tr key={i}>
+                        <td>{instruction.index}</td>
+                        <td>{instruction.bytes}</td>
+                        <td>{instruction.text}</td>
+                    </tr>
+                )}
+            </tbody>
+        </table>
+        <div className='sticky bottom-0 w-full'>
+            <a className='w-fit float-right px-1 m-2 bg-white border-2' href={download} download="code.wasm">Download</a>
+        </div>
+    </>
 }
 export default WasmComponent;

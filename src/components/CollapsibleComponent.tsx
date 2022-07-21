@@ -10,7 +10,7 @@ function CollapsibleComponent(props: PropsWithChildren<{name: string}>) {
             <div className='flex-none'>{collapsed ? "+" : "-"}</div>
         </div>
         {!collapsed && 
-        <div className='border-2 bg-white mt-2 h-fit max-h-36 overflow-auto flex flex-col space-y-1' onClick={e => e.stopPropagation()}>
+        <div className='relative border-2 bg-white mt-2 h-fit max-h-36 overflow-auto flex flex-col space-y-1' onClick={e => e.stopPropagation()}>
             {props.children}
         </div>}
     </div>
